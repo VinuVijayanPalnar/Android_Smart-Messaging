@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">SmartMsg</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="registration_form">REGISTRATION</string>
+    <string name="confirmation_form">CONFIRMATION</string>
+    <string name="registerbtn">REGISTER</string>
+    <string name="confirmationbtn">CONFIRM</string>
+    <string name="confirmationCode">Enter the confirmation code</string>
+    <string name="username">Username</string>
+    <string name="emailid">Email</string>
+
+    <string name="savebtn">SAVE</string>
+    <string name="firstnameTxtV">First Name</string>
+    <string name="lastnametxtV">Last Name</string>
+    <string name="profileEmailTxtV">Email</string>
+    <string name="ProfilephoneTxtV">Phone</string>
+
+   <string name="welcome_txt">GCM App</string>
+    <string name="email">Email Address</string>
+    <string name="login">Register Me</string>
+    <string name="defaultmsg">Message sent by server will appear here.</string>
+    <string name="msg_title">Message</string>
+    <string name="user_title">Hello User</string>
+
+
+
+</resources>
