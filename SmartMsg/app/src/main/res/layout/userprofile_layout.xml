@@ -43,7 +43,7 @@
         android:layout_width="fill_parent"
         android:layout_weight=".75"
         android:layout_height="wrap_content"
-        android:text="@string/firstnameTxtV"/>
+        android:text="@string/firstname"/>
     <EditText
         android:id="@+id/ETxtFirstName"
         android:layout_weight=".25"
@@ -60,7 +60,7 @@
             android:layout_width="fill_parent"
             android:layout_weight=".75"
             android:layout_height="wrap_content"
-            android:text="@string/lastnametxtV"/>
+            android:text="@string/lastname"/>
         <EditText
             android:id="@+id/ETxtLastName"
             android:layout_weight=".25"
@@ -77,7 +77,7 @@
             android:layout_width="fill_parent"
             android:layout_weight=".75"
             android:layout_height="wrap_content"
-            android:text="@string/profileEmailTxtV"/>
+            android:text="@string/profileEmailId"/>
         <EditText
             android:id="@+id/ETxtemail"
             android:layout_weight=".25"
@@ -94,7 +94,7 @@
             android:layout_width="fill_parent"
             android:layout_weight=".75"
             android:layout_height="wrap_content"
-            android:text="@string/ProfilephoneTxtV"/>
+            android:text="@string/ProfilephoneNo"/>
         <EditText
             android:id="@+id/ETxtPhone"
             android:layout_weight=".25"

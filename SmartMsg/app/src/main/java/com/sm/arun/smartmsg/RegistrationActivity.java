@@ -69,15 +69,15 @@ public class RegistrationActivity extends Activity {
         // Set Cancelable as False
         prgDialog.setCancelable(false);
 
-        SharedPreferences prefs = getSharedPreferences("UserDetails",
-                Context.MODE_PRIVATE);
-        String registrationId = prefs.getString(REG_ID, "");
-        if (!TextUtils.isEmpty(registrationId)) {
-            Intent i = new Intent(applicationContext,MessagingActivity.class);
-            i.putExtra("regId", registrationId);
-            startActivity(i);
-            finish();
-        }
+//        SharedPreferences prefs = getSharedPreferences("UserDetails",
+//                Context.MODE_PRIVATE);
+//        String registrationId = prefs.getString(REG_ID, "");
+//        if (!TextUtils.isEmpty(registrationId)) {
+//            Intent i = new Intent(applicationContext,MessagingActivity.class);
+//            i.putExtra("regId", registrationId);
+//            startActivity(i);
+//            finish();
+//        }
 //        =================
 
 //        RegisterBtn.setOnClickListener(new View.OnClickListener() {

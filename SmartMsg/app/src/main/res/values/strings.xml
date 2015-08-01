@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SmartMsg</string>
+    <string name="app_name">Smart Messaging</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
@@ -12,18 +13,16 @@
     <string name="emailid">Email</string>
 
     <string name="savebtn">SAVE</string>
-    <string name="firstnameTxtV">First Name</string>
-    <string name="lastnametxtV">Last Name</string>
-    <string name="profileEmailTxtV">Email</string>
-    <string name="ProfilephoneTxtV">Phone</string>
+    <string name="firstname">First Name</string>
+    <string name="lastname">Last Name</string>
+    <string name="profileEmailId">Email</string>
+    <string name="ProfilephoneNo">Phone</string>
 
-   <string name="welcome_txt">GCM App</string>
+    <string name="welcome_txt">GCM App</string>
     <string name="email">Email Address</string>
     <string name="login">Register Me</string>
     <string name="defaultmsg">Message sent by server will appear here.</string>
     <string name="msg_title">Message</string>
     <string name="user_title">Hello User</string>
-
-
 
 </resources>
