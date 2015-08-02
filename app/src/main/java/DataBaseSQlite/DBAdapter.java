@@ -103,7 +103,7 @@ public class DBAdapter {
         initialValue.put(KEY_FIRSTNAME,firstName);
         initialValue.put(KEY_LASTNAME,lastName);
         initialValue.put(KEY_PHONE_NO, phoneNo);
-        return  db.insert(DATABASE_CREATE_profileDetails,null,initialValue);
+        return  db.insert(TABLE_DETAILS,null,initialValue);
     }
 
     //-------------------INSERT MESSAGES INTO DATABASE--------------------------
