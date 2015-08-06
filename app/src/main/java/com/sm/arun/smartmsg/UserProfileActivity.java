@@ -43,8 +43,9 @@ import DataBaseSQlite.DBAdapter;
 public class UserProfileActivity extends Activity{
     private static final String MY_PREFS_NAME = "MyPrefs";
     ImageView ImageV;
-    EditText FrstName,LstName,Email,PhoneNo;
+    EditText FrstName,LstName,PhoneNo,Email;
     TextView UserName;
+    long DbId=-1;
     DBAdapter db;
     private static final int SELECT_PHOTO = 100;
     private static final int CAMERA_REQUEST=1888;
@@ -61,35 +62,52 @@ public class UserProfileActivity extends Activity{
         UserName=(TextView)findViewById(R.id.UserNameTxTView);
         FrstName=(EditText)findViewById(R.id.ETxtFirstName);
         LstName=(EditText)findViewById(R.id.ETxtLastName);
-        Email=(EditText)findViewById(R.id.ETxtEmail);
+        Email=(EditText)findViewById(R.id.ETxtemail);
         PhoneNo=(EditText)findViewById(R.id.ETxtPhone);
 
         SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME,Context.MODE_PRIVATE);
         String Username=Preferences.getString("UserName", "");
         String email=Preferences.getString("Email","");
+        Toast.makeText(this,Username+"and Email"+email, Toast.LENGTH_LONG).show();
+        registerForContextMenu(ImageV);
         if(!Username.equalsIgnoreCase("")) {
-
-            UserName.setText(Username);
-            Email.setText(email);
+            UserName.setText(Username.toString());
         }
 
-        Toast.makeText(this,Username, Toast.LENGTH_LONG).show();
+
         db= new DBAdapter(this);
-//        db.open();
-//        Cursor cursor=db.getProfileDetails(Username);
-//        if(cursor.moveToFirst())
-//        {
-//            do{
-//                Toast.makeText(this,"id:"+cursor.getString(0)+"/n"+"User Name:"+cursor.getString(1)+"/n"+"Emailid:"+cursor.getString(2)+"/n"+
-//                "First Name:"+cursor.getString(3)+"/n"+"LastName:"+cursor.getString(4)+"/n"+"Phone No"+cursor.getString(5),Toast.LENGTH_LONG).show();
-//            }while (cursor.moveToNext());
-//        }
-//        db.close();
-//        Email.setText(cursor.getString(2));
-//        FrstName.setText(cursor.getString(3));
-//        LstName.setText(cursor.getString(4));
-//        PhoneNo.setText(cursor.getString(5));
-        registerForContextMenu(ImageV);
+        Cursor cursor = null;
+        String Emailid="",Firstnmae="",lastname="",phoneno="";
+        try {
+            db.open();
+            cursor = db.getProfileDetails(Username);
+//
+            if (cursor.moveToFirst()) {
+                do {
+                    Toast.makeText(this, "id:" + cursor.getString(0) + "/n" + "User Name:" + cursor.getString(1) + "/n" + "Emailid:" + cursor.getString(2) + "/n" +
+                            "First Name:" + cursor.getString(3) + "/n" + "LastName:" + cursor.getString(4) + "/n" + "Phone No" + cursor.getString(5), Toast.LENGTH_LONG).show();
+                    DbId=cursor.getLong(0);
+                    Emailid =cursor.getString(2);
+                    Firstnmae= cursor.getString(3);
+                    lastname=cursor.getString(4);
+                    phoneno=cursor.getString(5);
+                } while (cursor.moveToNext());
+            }
+            db.close();
+        }catch (Exception e)
+        {
+            Log.e("exception caught",e.getMessage().toString());
+            Toast.makeText(this,e.getMessage().toString(),Toast.LENGTH_LONG).show();
+        }
+        if(Emailid!=null)
+            Email.setText(Emailid.toString());
+        if(Firstnmae!=null)
+            FrstName.setText(Firstnmae.toString());
+        if(lastname!=null)
+            LstName.setText(lastname.toString());
+        if(phoneno!=null)
+            PhoneNo.setText(phoneno.toString());
+
 
     }
 

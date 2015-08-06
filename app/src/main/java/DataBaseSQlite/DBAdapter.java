@@ -3,10 +3,13 @@ package DataBaseSQlite;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+
+import java.util.ArrayList;
 
 /**
  * Created by Arun on 07-28-2015.
@@ -38,6 +41,12 @@ public class DBAdapter {
             "firstName   text," +
             "lastName    text," +
             "phoneNo     long);";
+
+//    private static final String DATABASE_CREATE_profileDetails = "CREATE TABLE "
+//            + TABLE_DETAILS + "(" + KEY_DROWID + " INTEGER PRIMARY KEY," + KEY_USERNAME
+//            + " TEXT NOT NULL," + KEY_EMAILID + " TEXT NOT NULL," + KEY_FIRSTNAME
+//            + " TEXT,"+ KEY_LASTNAME +" TEXT,"+ KEY_PHONE_NO +" LONG"+");";
+
 
     static final String DATABASE_CREATE_pushMessages="create table pushMessages(" +
             "M_id        integer         primary key     autoincrement,"+
@@ -81,17 +90,21 @@ public class DBAdapter {
             db.execSQL("DROP TABLE IF EXISTS pushMessages");
             onCreate(db);
         }
+
+
     }
 //--------------------OPEN DATABASE--------------------------------
         public DBAdapter open()throws SQLException
         {
           db=DBHelper.getWritableDatabase();
+            Log.e("DATABASE OPERATIONS","database created or opened"+db.getAttachedDbs());
             return  this;
         }
 // ---------------------CLOSE DATABASE-----------------------------------
     public void close()
     {
         DBHelper.close();
+        Log.e("DATABASE OPERATIONS", "database closed");
     }
 //=======================INSERT INTO DATABASE============================
 
@@ -103,7 +116,10 @@ public class DBAdapter {
         initialValue.put(KEY_FIRSTNAME,firstName);
         initialValue.put(KEY_LASTNAME,lastName);
         initialValue.put(KEY_PHONE_NO, phoneNo);
-        return  db.insert(TABLE_DETAILS,null,initialValue);
+        long dbid= db.insert(TABLE_DETAILS, null, initialValue);
+        Log.e("DATABASE OPERATIONS", "Value inserted");
+        return dbid;
+
     }
 
     //-------------------INSERT MESSAGES INTO DATABASE--------------------------
@@ -126,18 +142,32 @@ public class DBAdapter {
     //--------------------RETRIEVE ALL PROFILE DETAILS-------------------------------
     public Cursor getAllProfileDetails()
     {
-        return db.query(DATABASE_CREATE_profileDetails, new String[]{KEY_USERNAME, KEY_EMAILID, KEY_FIRSTNAME, KEY_LASTNAME, KEY_PHONE_NO}, null, null, null, null, null);
+        return db.query(TABLE_DETAILS, new String[]{KEY_USERNAME, KEY_EMAILID, KEY_FIRSTNAME, KEY_LASTNAME, KEY_PHONE_NO}, null, null, null, null, null);
     }
     //--------------------RETRIEVE A PERTICULAR PROFILE DETAILS-------------------------------
 
     public  Cursor getProfileDetails(String username)throws SQLException {
-        String query = "select * from profileDetails where userName ="+ username;
-        Cursor mCursor = db.rawQuery(query, new String[]{KEY_DROWID,KEY_USERNAME,KEY_EMAILID,KEY_FIRSTNAME,KEY_LASTNAME,KEY_PHONE_NO});
-//        Cursor mCursor=db.query(true,DATABASE_CREATE_profileDetails,new String[]{KEY_DROWID,KEY_USERNAME,KEY_EMAILID,KEY_FIRSTNAME,KEY_LASTNAME,KEY_PHONE_NO},KEY_USERNAME+"="+userName,null,null,null,null);
+     String query = " SELECT * FROM profileDetails WHERE userName = ?";
+//       String query = "SELECT * FROM "+ TABLE_DETAILS +" WHERE "+KEY_USERNAME+" = "+"'"+username+"'"+";";
+        Log.e("Retrieval Query", query);
+       Cursor mCursor = db.rawQuery(query, new String[]{""+username},null);
+//        Cursor mCursor=db.query(true,TABLE_DETAILS,new String[]{KEY_DROWID,KEY_USERNAME,KEY_EMAILID,KEY_FIRSTNAME,KEY_LASTNAME,KEY_PHONE_NO}, KEY_DROWID +" = "+rowId,null,null,null,null);
+//        Cursor mCursor=db.query(true,TABLE_DETAILS,new String[]{KEY_DROWID,KEY_USERNAME,KEY_EMAILID,KEY_FIRSTNAME,KEY_LASTNAME,KEY_PHONE_NO},KEY_USERNAME+"="+userName,null,null,null,null);
         if (mCursor != null) {
             mCursor.moveToFirst();
 
         }
+        Log.e("mCursor", mCursor.getString(0));
+        Log.e("mCursor", mCursor.getString(1));
+        Log.e("mCursor", mCursor.getString(2));
+        Log.e("mCursor", mCursor.getString(3));
+        Log.e("mCursor", mCursor.getString(4));
+        Log.e("mCursor", mCursor.getString(5));
+
+
+
+
+        Log.e("DATABASE OPERATIONS", "Retrieved Data");
         return  mCursor;
     }
 
@@ -161,10 +191,11 @@ public class DBAdapter {
     public boolean updateprofile(long RowId,String UserName,String Email,String FirstName,String LastName,long PhoneNo){
         ContentValues args = new ContentValues();
         args.put(KEY_FIRSTNAME,FirstName);
-        args.put(KEY_LASTNAME,LastName);
-        args.put(KEY_PHONE_NO,PhoneNo);
+        args.put(KEY_LASTNAME, LastName);
+        args.put(KEY_PHONE_NO, PhoneNo);
         return db.update(DATABASE_CREATE_profileDetails,args,KEY_DROWID+"="+RowId,null)>0;
     }
 
     //-----------------------------------UDATE MESSAGES------------------------
+
 }

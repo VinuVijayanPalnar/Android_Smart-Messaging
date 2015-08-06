@@ -17,15 +17,15 @@
 
     <ImageView
          android:src="@drawable/userimage"
-        android:layout_width="50dp"
         android:layout_height="match_parent"
-        android:layout_weight=".25"
+        android:layout_width="@dimen/abc_control_inset_material"
+        android:layout_weight=".20"
         android:scaleType="centerInside"
         android:id="@+id/imageView" />
     <TextView
         android:id="@+id/UserNameTxTView"
         android:layout_width="wrap_content"
-        android:layout_weight=".75"
+        android:layout_weight=".80"
         android:gravity="center"
         android:layout_gravity="center_vertical"
         android:layout_height="wrap_content"
@@ -69,6 +69,23 @@
             android:inputType="text"
              />
     </LinearLayout>
+    <!--<LinearLayout-->
+        <!--android:layout_marginTop="10dp"-->
+        <!--android:layout_width="fill_parent"-->
+        <!--android:layout_height="wrap_content">-->
+        <!--<TextView-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_weight=".75"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="@string/profileEmailId"/>-->
+        <!--<EditText-->
+            <!--android:id="@+id/ETxtemail"-->
+            <!--android:layout_weight=".25"-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="40dp"-->
+            <!--android:inputType="textEmailAddress"-->
+            <!--/>-->
+    <!--</LinearLayout>-->
     <LinearLayout
         android:layout_marginTop="10dp"
         android:layout_width="fill_parent"
@@ -77,13 +94,13 @@
             android:layout_width="fill_parent"
             android:layout_weight=".75"
             android:layout_height="wrap_content"
-            android:text="@string/profileEmailId"/>
+            android:text="@string/emailid"/>
         <EditText
             android:id="@+id/ETxtemail"
             android:layout_weight=".25"
             android:layout_width="fill_parent"
             android:layout_height="40dp"
-            android:inputType="textEmailAddress"
+            android:inputType="text"
             />
     </LinearLayout>
     <LinearLayout
