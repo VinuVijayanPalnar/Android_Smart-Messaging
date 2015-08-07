@@ -133,47 +133,37 @@ public class RegistrationActivity extends Activity {
 //    ====================================================================
     // When Register Me button is clicked
     public void RegisterUser(View view) {
+
         String emailID = Email.getText().toString();
+        if (!TextUtils.isEmpty(emailID) && Utility.validate(emailID)) {
+            db.open();
+            String usNme=userName.getText().toString();
+            long Dbid =db.insertProfileDeatils(usNme, emailID, "", "", "");
+            Toast.makeText(RegistrationActivity.this,"Db id:"+Dbid,Toast.LENGTH_LONG).show();
+            db.close();
+            SharedPreferences.Editor editor=getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
+            editor.putString("UserName", userName.getText().toString());
+            editor.putString("Email", Email.getText().toString());
+            editor.commit();
+            new ServiceTask().execute();
 
-//=======================  test paste===========================
-
-                db.open();
-                String usNme=userName.getText().toString();
-                long Dbid =db.insertProfileDeatils(usNme, emailID, "", "", "");
-                Toast.makeText(RegistrationActivity.this,"Db id:"+Dbid,Toast.LENGTH_LONG).show();
-                db.close();
-                SharedPreferences.Editor editor=getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
-                editor.putString("UserName", userName.getText().toString());
-                editor.putString("Email", Email.getText().toString());
-                editor.commit();
-                new ServiceTask().execute();
-//                AppUser usr=Users.get(0);
-//                txtResponse.setImageBitmap(usr.photo);
-//          getJSON("http://api.androidhive.info/volley/person_object.json",0);
-
-//                Intent myIntend= new Intent(RegistrationActivity.this,ConfirmationActivity.class);
-//                String message = userName.getText().toString();
-//                myIntend.putExtra("EXTRA_MESSAGE", message);
-//                startActivity(myIntend);
-//   =======================  test paste============================
-
-//   =======================  test comment============================
-//        if (!TextUtils.isEmpty(emailID) && Utility.validate(emailID)) {
-//
-//            // Check if Google Play Service is installed in Device
-//            // Play services is needed to handle GCM stuffs
+            // Check if Google Play Service is installed in Device
+            // Play services is needed to handle GCM stuffs
+        // ======TO BE UNCOMMENTED============================
 //            if (checkPlayServices()) {
 //
 //                // Register Device in GCM Server
 //                registerInBackground(emailID);
 //            }
-//        }
-//        // When Email is invalid
-//        else {
-//            Toast.makeText(applicationContext, "Please enter valid email",
-//                    Toast.LENGTH_LONG).show();
-//        }
-  //   =======================  test comment==========================
+
+        }
+        // When Email is invalid
+        else {
+            Toast.makeText(applicationContext, "Please enter valid email",
+                    Toast.LENGTH_LONG).show();
+        }
+
+
     }
  private static String convertStreamToString(InputStream is) {
         /*
@@ -481,8 +471,7 @@ public class RegistrationActivity extends Activity {
     protected void onPreExecute() {
         super.onPreExecute();
     }
-// http://stackoverflow.com/questions/20689356/android-os-networkonmainthreadexception-and-java-lang-reflect-invocationtargetex
-    @Override
+ @Override
     protected String doInBackground(String... params) {
 
         BufferedReader br = null;
@@ -490,21 +479,17 @@ public class RegistrationActivity extends Activity {
 
         HttpURLConnection c = null;
         try {
+// URL u = new URL("http://192.168.1.172/smartchat/public/loginCheck?username="+userName.getText().toString()+"&password="+Email.getText().toString()+"");
+            URL u = new URL("http://192.168.1.172/smartchat/public/addUser?username="+userName.getText().toString()+"&email="+Email.getText().toString()+"&first_name=sa&last_name=a&mobile_number=1&user_group_id=1&device_type_id=2&device_id=xxyyrryyxx&is_verified=1&photo=aacccccc");
 
-           int timeout=30;
-
-            URL u = new URL("http://192.168.1.172/smartchat/public/getAllUsers");
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
-            // c.setRequestProperty("Content-length", "0");
+            c.setRequestProperty("Content-length", "0");
             c.setRequestProperty("Content-Type", "application/json");
             c.setUseCaches(false);
             c.setAllowUserInteraction(false);
-//            c.setConnectTimeout(timeout);
-//            c.setReadTimeout(timeout);
             c.connect();
             int status = c.getResponseCode();
-
             switch (status) {
                 case 200:
                 case 201:
@@ -520,8 +505,10 @@ public class RegistrationActivity extends Activity {
 
         } catch (MalformedURLException ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+            return sb.toString();
         } catch (IOException ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+            return sb.toString();
         } finally {
             if (c != null) {
                 try {
@@ -530,53 +517,70 @@ public class RegistrationActivity extends Activity {
                     Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
                 }
             }
+
         }
-     return sb.toString();
-    }
+        return sb.toString();
+ }
 
     @Override
     protected void onPostExecute(String result) {
         try {
-            //ArrayList<HashMap<String, String>> medecins = new ArrayList<HashMap<String, String>>();
-// ========THIS IS USED IF THE RESPONSE IS A JSON ARRAY=======================
-            JSONArray js = new JSONArray(result.toString());
-           for(int i=0; i<js.length(); i++){
-                JSONObject jsObj = js.getJSONObject(i);
-                int id = Integer.parseInt(jsObj.getString("id"));
-                String username = jsObj.getString("username");
-                String email = jsObj.getString("email");
-                String firstname = jsObj.getString("first_name");
-                String lastname = jsObj.getString("last_name");
-                String mobile_no = jsObj.getString("mobile_number");
-                String blob = jsObj.getString("photo");
-                Bitmap bm =  decodeBase64(blob);
-               txtResponse.setImageBitmap(bm);
-
-                AppUser user= new AppUser(id,username,email,firstname,lastname,mobile_no,bm);
-
-                Users.add(i,user);
-            }
-
-        } catch (JSONException e) {
+                JSONObject jsObj = new JSONObject(result.toString());
+                String Status = jsObj.getString("Status_Msg");
+                switch (Status) {
+                    case "1000": Toast.makeText(RegistrationActivity.this,"UserName Already Exists",Toast.LENGTH_LONG).show();
+                                break;
+                    case "1001":Toast.makeText(RegistrationActivity.this,"Email Id Already Exists",Toast.LENGTH_LONG).show();
+                                break;
+                    case "1002"://===MAKE SERVER CALL TO FETCH USER DETAILS MESSAGES ADMIN DETAILS ANS SO=====
+                                Toast.makeText(RegistrationActivity.this,"Registered User",Toast.LENGTH_LONG).show();
+                                Intent myIntend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
+                                myIntend.putExtra("USR_Nme", userName.getText().toString());
+                                myIntend.putExtra("EMAIL", Email.getText().toString());
+                                startActivity(myIntend);
+//                                finish();
+                                break;
+                    case "Ok":  Intent Intend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
+                                Intend.putExtra("USR_Nme", userName.getText().toString());
+                                Intend.putExtra("EMAIL", Email.getText().toString());
+                                startActivity(Intend);
+//                                finish();
+                                break;
+                    case "NOk": Toast.makeText(RegistrationActivity.this,"Registration Failed",Toast.LENGTH_LONG).show();
+                                break;
+                }
+              } catch (JSONException e) {
             e.printStackTrace();
-            System.out.println("Erreur 4");
+            System.out.println("JSon Exception occured");
         }
+
     }
 }
     public static Bitmap decodeBase64(String input)
     {
-        byte[] decodedByte = Base64.decode(input, 0);
-        return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+        try {
+            byte[] decodedByte = Base64.decode(input, 0);
+            return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+        }catch (IllegalArgumentException e){
+            return null;
+        }
     }
-    public static String encodeTobase64(Bitmap image)
-    {
-        Bitmap immagex=image;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        immagex.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] b = baos.toByteArray();
-        String imageEncoded = Base64.encodeToString(b, Base64.DEFAULT);
+    public static String encodeTobase64(Bitmap image) {
+        try {
 
-        Log.e("LOOK", imageEncoded);
-        return imageEncoded;
+
+            Bitmap immagex = image;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            immagex.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] b = baos.toByteArray();
+            String imageEncoded = Base64.encodeToString(b, Base64.DEFAULT);
+
+            Log.e("LOOK", imageEncoded);
+            return imageEncoded;
+        } catch (IllegalArgumentException e) {
+            return "" ;
+        }
     }
+
+
 }

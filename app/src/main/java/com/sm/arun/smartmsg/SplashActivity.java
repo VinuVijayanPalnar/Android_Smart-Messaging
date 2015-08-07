@@ -37,7 +37,6 @@ public class SplashActivity extends Activity {
         Parent.setBackgroundResource(R.drawable.icon_listview);
         else
         Parent.setBackgroundResource(R.drawable.userimage);
-
         db= new DBAdapter(this);
 // METHOD 1
  /****** Create Thread that will sleep for 5 seconds *************/

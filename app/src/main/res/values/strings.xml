@@ -13,6 +13,7 @@
     <string name="emailid">Email</string>
 
     <string name="savebtn">SAVE</string>
+    <string name="editbtn">EDIT</string>
     <string name="firstname">First Name</string>
     <string name="lastname">Last Name</string>
     <string name="profileEmailId">Email</string>

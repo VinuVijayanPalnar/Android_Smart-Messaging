@@ -120,12 +120,34 @@
             android:inputType="phone"
             />
     </LinearLayout>
-<Button
-    android:layout_width="wrap_content"
-    android:layout_gravity="center"
-    android:layout_marginTop="15dp"
-    android:text="@string/savebtn"
-    android:layout_height="40dp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/SaveBtn"
+            android:onClick="SaveProfileDetails"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:layout_weight=".5"
+            android:text="@string/savebtn"
+            android:layout_height="40dp" />
+        <Button
+            android:id="@+id/editBtn"
+            android:layout_weight=".5"
+            android:onClick="EditProfileDetails"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:text="@string/editbtn"
+            android:layout_height="40dp" />
+    </LinearLayout>
+
 </LinearLayout>
 
 
