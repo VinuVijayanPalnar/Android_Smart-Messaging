@@ -33,10 +33,10 @@ public class SplashActivity extends Activity {
 
 //========checking the language and determining the backgroung=====
         Parent=(RelativeLayout)findViewById(R.id.SplashLayout);
-        if(Locale.getDefault().getLanguage().equals("ml"))
-        Parent.setBackgroundResource(R.drawable.icon_listview);
+        if(Locale.getDefault().getLanguage().equals("ar"))
+        Parent.setBackgroundResource(R.drawable.splashscreen_ar);
         else
-        Parent.setBackgroundResource(R.drawable.userimage);
+        Parent.setBackgroundResource(R.drawable.splashscreen_en);
         db= new DBAdapter(this);
 // METHOD 1
  /****** Create Thread that will sleep for 5 seconds *************/

@@ -60,6 +60,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -95,7 +96,6 @@ public class RegistrationActivity extends Activity {
     public static final String EMAIL_ID = "eMailId";
     Button RegisterBtn;
     EditText userName,Email;
-    private ImageView txtResponse;
     DBAdapter db;
     public static final String MY_PREFS_NAME = "MyPrefs";
     @Override
@@ -108,7 +108,6 @@ public class RegistrationActivity extends Activity {
         RegisterBtn=(Button)findViewById(R.id.butnRegister);
         userName=(EditText)findViewById(R.id.ETxtUsername);
         Email=(EditText)findViewById(R.id.ETxtEmail);
-        txtResponse = (ImageView) findViewById(R.id.ResponseText);
         db= new DBAdapter(this);
 //        ================
         prgDialog = new ProgressDialog(this);
@@ -144,6 +143,7 @@ public class RegistrationActivity extends Activity {
             SharedPreferences.Editor editor=getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
             editor.putString("UserName", userName.getText().toString());
             editor.putString("Email", Email.getText().toString());
+            editor.putLong("UserId", Dbid);
             editor.commit();
             new ServiceTask().execute();
 
@@ -503,20 +503,26 @@ public class RegistrationActivity extends Activity {
                     return sb.toString();
             }
 
-        } catch (MalformedURLException ex) {
+        }catch (ConnectException e) {
+        Log.e("Exception Caught", e.getMessage());
+            Toast.makeText(RegistrationActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+
+        }
+        catch (MalformedURLException ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
-            return sb.toString();
+            Toast.makeText(applicationContext, ex.getCause().toString(), Toast.LENGTH_LONG).show();
+            onPostExecute(null);
         } catch (IOException ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
-            return sb.toString();
-        } finally {
+            Toast.makeText(applicationContext, ex.getCause().toString(), Toast.LENGTH_LONG).show();
+         } finally {
             if (c != null) {
                 try {
                     c.disconnect();
                 } catch (Exception ex) {
                     Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
                 }
-            }
+             }
 
         }
         return sb.toString();
@@ -524,35 +530,43 @@ public class RegistrationActivity extends Activity {
 
     @Override
     protected void onPostExecute(String result) {
+        if (result == "")
+            return;
+        else
         try {
                 JSONObject jsObj = new JSONObject(result.toString());
                 String Status = jsObj.getString("Status_Msg");
                 switch (Status) {
-                    case "1000": Toast.makeText(RegistrationActivity.this,"UserName Already Exists",Toast.LENGTH_LONG).show();
-                                break;
-                    case "1001":Toast.makeText(RegistrationActivity.this,"Email Id Already Exists",Toast.LENGTH_LONG).show();
-                                break;
+                    case "1000":
+                        Toast.makeText(RegistrationActivity.this, "UserName Already Exists", Toast.LENGTH_LONG).show();
+                        break;
+                    case "1001":
+                        Toast.makeText(RegistrationActivity.this, "Email Id Already Exists", Toast.LENGTH_LONG).show();
+                        break;
                     case "1002"://===MAKE SERVER CALL TO FETCH USER DETAILS MESSAGES ADMIN DETAILS ANS SO=====
-                                Toast.makeText(RegistrationActivity.this,"Registered User",Toast.LENGTH_LONG).show();
-                                Intent myIntend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
-                                myIntend.putExtra("USR_Nme", userName.getText().toString());
-                                myIntend.putExtra("EMAIL", Email.getText().toString());
-                                startActivity(myIntend);
+                        Toast.makeText(RegistrationActivity.this, "Registered User", Toast.LENGTH_LONG).show();
+                        Intent myIntend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
+                        myIntend.putExtra("USR_Nme", userName.getText().toString());
+                        myIntend.putExtra("EMAIL", Email.getText().toString());
+                        startActivity(myIntend);
 //                                finish();
-                                break;
-                    case "Ok":  Intent Intend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
-                                Intend.putExtra("USR_Nme", userName.getText().toString());
-                                Intend.putExtra("EMAIL", Email.getText().toString());
-                                startActivity(Intend);
+                        break;
+                    case "Ok":
+                        Intent Intend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
+                        Intend.putExtra("USR_Nme", userName.getText().toString());
+                        Intend.putExtra("EMAIL", Email.getText().toString());
+                        startActivity(Intend);
 //                                finish();
-                                break;
-                    case "NOk": Toast.makeText(RegistrationActivity.this,"Registration Failed",Toast.LENGTH_LONG).show();
-                                break;
+                        break;
+                    case "NOk":
+                        Toast.makeText(RegistrationActivity.this, "Registration Failed", Toast.LENGTH_LONG).show();
+                        break;
                 }
-              } catch (JSONException e) {
-            e.printStackTrace();
-            System.out.println("JSon Exception occured");
-        }
+            } catch (JSONException e) {
+                e.printStackTrace();
+                System.out.println("JSon Exception occured");
+            }
+
 
     }
 }

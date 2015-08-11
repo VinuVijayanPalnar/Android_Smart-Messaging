@@ -27,6 +27,7 @@ public class DBAdapter {
     static final String KEY_FIRSTNAME="firstName";
     static final String KEY_LASTNAME="lastName";
     static  final String KEY_PHONE_NO="phoneNo";
+    static final String KEY_USERIMAGE="photo";
     //TABLE_MESSAGES fields
     static final String KEY_MROWID="M_id";
     static final String KEY_DATE="date";
@@ -40,7 +41,8 @@ public class DBAdapter {
             "email       text        not null," +
             "firstName   text," +
             "lastName    text," +
-            "phoneNo     long);";
+            "phoneNo     long,"+
+            "photo       text);";
 
 //    private static final String DATABASE_CREATE_profileDetails = "CREATE TABLE "
 //            + TABLE_DETAILS + "(" + KEY_DROWID + " INTEGER PRIMARY KEY," + KEY_USERNAME
@@ -146,14 +148,15 @@ public class DBAdapter {
     }
     //--------------------RETRIEVE A PERTICULAR PROFILE DETAILS-------------------------------
 
-    public  Cursor getProfileDetails(String username)throws SQLException {
-     String query = " SELECT * FROM profileDetails WHERE userName = ?";
+    public  Cursor getProfileDetails(long Dbid)throws SQLException {
+//        ====== WORKING QUERY WITH USERNAME=================
+//     String query = " SELECT * FROM profileDetails WHERE userName = ?";
 //       String query = "SELECT * FROM "+ TABLE_DETAILS +" WHERE "+KEY_USERNAME+" = "+"'"+username+"'"+";";
-        Log.e("Retrieval Query", query);
-       Cursor mCursor = db.rawQuery(query, new String[]{""+username},null);
-//        Cursor mCursor=db.query(true,TABLE_DETAILS,new String[]{KEY_DROWID,KEY_USERNAME,KEY_EMAILID,KEY_FIRSTNAME,KEY_LASTNAME,KEY_PHONE_NO}, KEY_DROWID +" = "+rowId,null,null,null,null);
-//        Cursor mCursor=db.query(true,TABLE_DETAILS,new String[]{KEY_DROWID,KEY_USERNAME,KEY_EMAILID,KEY_FIRSTNAME,KEY_LASTNAME,KEY_PHONE_NO},KEY_USERNAME+"="+userName,null,null,null,null);
-        if (mCursor != null) {
+//       Cursor mCursor = db.rawQuery(query, new String[]{""+username},null);
+        String query = " SELECT * FROM profileDetails WHERE D_id = ?";
+        Cursor mCursor = db.rawQuery(query, new String[]{""+Dbid},null);
+//        Cursor mCursor=db.query(true,TABLE_DETAILS,new String[]{KEY_DROWID,KEY_USERNAME,KEY_EMAILID,KEY_FIRSTNAME,KEY_LASTNAME,KEY_PHONE_NO,KEY_USERIMAGE}, KEY_DROWID +" =" +Dbid,null,null,null,null,null);
+         if (mCursor != null) {
             mCursor.moveToFirst();
 
         }
@@ -163,10 +166,7 @@ public class DBAdapter {
         Log.e("mCursor", mCursor.getString(3));
         Log.e("mCursor", mCursor.getString(4));
         Log.e("mCursor", mCursor.getString(5));
-
-
-
-
+        Log.e("mCursor", mCursor.getString(6));
         Log.e("DATABASE OPERATIONS", "Retrieved Data");
         return  mCursor;
     }
@@ -188,11 +188,12 @@ public class DBAdapter {
     }
 //==========================================UPDATE=================================
     //------------------------------------UPDATE PROFILE DETAILS------------------
-    public boolean updateprofile(long RowId,String UserName,String Email,String FirstName,String LastName,long PhoneNo){
+    public boolean updateprofile(long RowId,String FirstName,String LastName,long PhoneNo,String photo){
         ContentValues args = new ContentValues();
         args.put(KEY_FIRSTNAME,FirstName);
         args.put(KEY_LASTNAME, LastName);
         args.put(KEY_PHONE_NO, PhoneNo);
+        args.put(KEY_USERIMAGE,photo);
         return db.update(DATABASE_CREATE_profileDetails,args,KEY_DROWID+"="+RowId,null)>0;
     }
 

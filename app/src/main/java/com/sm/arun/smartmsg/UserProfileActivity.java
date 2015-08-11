@@ -74,6 +74,7 @@ public class UserProfileActivity extends Activity{
     long DbId=-1;
     DBAdapter db;
     String Username,email;
+    String encoded_image="No image";
     private static final int SELECT_PHOTO = 100;
     private static final int CAMERA_REQUEST=1888;
     private Uri imageUri;
@@ -97,35 +98,37 @@ public class UserProfileActivity extends Activity{
         SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
         Username=Preferences.getString("UserName", "");
         email=Preferences.getString("Email","");
-        Toast.makeText(this,Username+"and Email"+email, Toast.LENGTH_LONG).show();
+        DbId=Preferences.getLong("UserId", 0);
         registerForContextMenu(ImageV);
         if(!Username.equalsIgnoreCase("")) {
             UserName.setText(Username.toString());
+            Email.setText(email.toString());
         }
 
 
         db= new DBAdapter(this);
         Cursor cursor = null;
-        String Emailid="",Firstnmae="",lastname="",phoneno="";
+        String Emailid="",Firstnmae="",lastname="",phoneno="",photo="";
         try {
             db.open();
-            cursor = db.getProfileDetails(Username);
+            cursor = db.getProfileDetails(DbId);
             if (cursor.moveToFirst()) {
                 do {
                     Toast.makeText(this, "id:" + cursor.getString(0) + "/n" + "User Name:" + cursor.getString(1) + "/n" + "Emailid:" + cursor.getString(2) + "/n" +
-                            "First Name:" + cursor.getString(3) + "/n" + "LastName:" + cursor.getString(4) + "/n" + "Phone No" + cursor.getString(5), Toast.LENGTH_LONG).show();
-                    DbId=cursor.getLong(0);
+                            "First Name:" + cursor.getString(3) + "/n" + "LastName:" + cursor.getString(4) + "/n" + "Phone No" + cursor.getString(5) + "/n" + "photo:" + cursor.getString(6), Toast.LENGTH_LONG).show();
+                    DbId=cursor.getInt(0);
                     Emailid =cursor.getString(2);
                     Firstnmae= cursor.getString(3);
                     lastname=cursor.getString(4);
                     phoneno=cursor.getString(5);
+                    photo=cursor.getString(6);
                 } while (cursor.moveToNext());
             }
             db.close();
         }catch (Exception e)
         {
-            Log.e("exception caught",e.getMessage().toString());
-            Toast.makeText(this,e.getMessage().toString(),Toast.LENGTH_LONG).show();
+            Log.e("exception caught", e.getMessage().toString());
+//            Toast.makeText(this,e.getMessage().toString(),Toast.LENGTH_LONG).show();
         }
         if(Emailid!=null)
             Email.setText(Emailid.toString());
@@ -143,19 +146,22 @@ public class UserProfileActivity extends Activity{
         Save.setEnabled(false);
     }
     public  void SaveProfileDetails(View view) {
-        EditProfile(UserName.getText().toString(), Email.getText().toString());
+        db.open();
+        boolean IsSaved =db.updateprofile(DbId,FrstName.getText().toString(),LstName.getText().toString(),Long.parseLong(PhoneNo.getText().toString()),encoded_image);
+        Toast.makeText(UserProfileActivity.this, "Is Saved:"+IsSaved, Toast.LENGTH_LONG).show();
+        db.close();
         FrstName.setEnabled(false);
         LstName.setEnabled(false);
-        Email.setEnabled(false);
         PhoneNo.setEnabled(false);
         ImageV.setEnabled(false);
         Save.setEnabled(false);
         Edit.setEnabled(true);
+        EditProfile(UserName.getText().toString(), Email.getText().toString());
+
     }
     public  void EditProfileDetails(View view) {
        FrstName.setEnabled(true);
         LstName.setEnabled(true);
-        Email.setEnabled(true);
         PhoneNo.setEnabled(true);
         ImageV.setEnabled(true);
         Save.setEnabled(true);
@@ -370,6 +376,7 @@ public class UserProfileActivity extends Activity{
             return null;
         }
     }
+
     private void EditProfile(String UserName, String E_mail) {
         new AsyncTask<String, Void, String>() {
             @Override
@@ -378,8 +385,6 @@ public class UserProfileActivity extends Activity{
             }
             @Override
             protected String doInBackground(String... params) {
-
-
                 BufferedReader br = null;
                 StringBuilder sb = new StringBuilder("");
 
@@ -387,21 +392,16 @@ public class UserProfileActivity extends Activity{
                 try {
 
                     int timeout=30;
-                    String encoded_image=encodeTobase64(UserImage);
-                    URL u = new URL(" http://192.168.1.172/smartchat/public/addUser?username=vishnu&email=vishnu@gmail.com&first_name=Vishak&last_name=Krishanan&mobile_number=7898768696&user_group_id=1&device_type_id=2&device_id=xxyyrryyxx&is_verified=1&photo="+encoded_image+"");
+                    if(UserImage!=null)
+                    encoded_image=encodeTobase64(UserImage);
+                    URL u = new URL("http://192.168.1.172/smartchat/public/editUser");
                     c = (HttpURLConnection) u.openConnection();
                     c.setRequestMethod("POST");
                     // c.setRequestProperty("Content-length", "0");
-                    c.setRequestProperty("Content-Type", "application/json");
+//                    c.setRequestProperty("Content-Type", "application/json");
                     c.setUseCaches(false);
-                    c.setAllowUserInteraction(false);
+//                    c.setAllowUserInteraction(false);
                     List<NameValuePair> data = new ArrayList<NameValuePair>();
-
-//                    UserName=(TextView)findViewById(R.id.UserNameTxTView);
-                    FrstName=(EditText)findViewById(R.id.ETxtFirstName);
-                    LstName=(EditText)findViewById(R.id.ETxtLastName);
-                    Email=(EditText)findViewById(R.id.ETxtemail);
-                    PhoneNo=(EditText)findViewById(R.id.ETxtPhone);
 
                     data.add(new BasicNameValuePair("username", Username));
                     data.add(new BasicNameValuePair("email", email));
@@ -412,7 +412,7 @@ public class UserProfileActivity extends Activity{
                     data.add(new BasicNameValuePair("device_type_id","2"));
                     data.add(new BasicNameValuePair("device_id", "xxyyrryyxx"));
                     data.add(new BasicNameValuePair("is_verified", "1"));
-                    data.add(new BasicNameValuePair("photo", encoded_image));
+                    data.add(new BasicNameValuePair("photo",encoded_image));
 
                     OutputStream os = c.getOutputStream();
                     BufferedWriter writer = new BufferedWriter(
@@ -429,22 +429,14 @@ public class UserProfileActivity extends Activity{
                     switch (status) {
                         case 200:
                         case 201:
-
-                            try
-                            { br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-                                String line = "";
-                                while (line != null)
-                                {
-                                    line = br.readLine();
-                                    sb.append(line);
-                                }
+                            br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+                            sb = new StringBuilder();
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                sb.append(line+"\n");
                             }
-                            finally
-                            {
-                                br.close();
-                            }
-
-                            return br.toString();
+                            br.close();
+                            return sb.toString();
                     }
                   } catch (MalformedURLException ex) {
                     Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
@@ -476,7 +468,7 @@ public class UserProfileActivity extends Activity{
 //                    String firstname = jsObj.getString("first_name");
 //                    String lastname = jsObj.getString("last_name");
 //                    String mobile_no = jsObj.getString("mobile_number");
-                    String status = jsObj.getString("Status_Msg");
+                    String status = jsObj.getString("reg_status");
                     Toast.makeText(UserProfileActivity.this,"Response status"+status,Toast.LENGTH_LONG).show();
                     Log.e("Response status",status);
 //                    Bitmap bm =  decodeBase64(blob);
@@ -523,7 +515,7 @@ public class UserProfileActivity extends Activity{
     {
         Bitmap immagex=image;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        immagex.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        immagex.compress(Bitmap.CompressFormat.JPEG, 40, baos);
         byte[] b = baos.toByteArray();
         String imageEncoded = Base64.encodeToString(b, Base64.DEFAULT);
 
