@@ -4,7 +4,7 @@
 
     <!-- Background color -->
     <solid
-        android:color="@color/bg_button_login" >
+        android:color="@color/Maroon" >
     </solid>
 
     <!-- Padding -->

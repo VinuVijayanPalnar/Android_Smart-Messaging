@@ -2,6 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="@dimen/activity_vertical_margin"
+    android:background="@drawable/background"
     tools:context=".RegistrationActivity">
 <LinearLayout
     android:id="@+id/headerlayout"
@@ -9,7 +10,7 @@
     android:layout_height="45dp"
     android:orientation="vertical"
     android:gravity="center_vertical"
-    android:background="@color/Maroon">
+    android:background="@drawable/bg_button_rounded">
     <TextView android:text="@string/registration_form"
         android:textSize="17dp"
         android:layout_width="wrap_content"
@@ -31,16 +32,19 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="20dp"
+        android:textColor="@color/White"
         android:text="@string/username"/>
     <EditText
         android:id="@+id/ETxtUsername"
         android:layout_width="fill_parent"
+        android:background="@drawable/bg_form_rounded"
         android:layout_height="40dp"
         android:inputType="text"
        />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="20dp"
+        android:textColor="@color/White"
         android:text="@string/emailid"/>
     <EditText
         android:id="@+id/ETxtEmail"
@@ -48,6 +52,7 @@
         android:layout_height="40dp"
         android:inputType="textEmailAddress"
         android:autoText="false"
+        android:background="@drawable/bg_form_rounded"
         android:focusableInTouchMode="true" />
     <Button
         android:id="@+id/butnRegister"
@@ -56,7 +61,7 @@
         android:layout_marginTop="15dp"
         android:text="@string/registerbtn"
         android:textColor="@color/White"
-        android:background="@color/Maroon"
+        android:background="@drawable/bg_button_rounded"
         android:onClick="RegisterUser"
 
         />

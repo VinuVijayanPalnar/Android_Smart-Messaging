@@ -3,15 +3,39 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/background"
     android:orientation="vertical"
-    android:layout_margin="20dp">
+   >
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_height="wrap_content">
+        <ImageButton
+            android:id="@+id/backBtn"
+           android:onClick="BackToMessages"
+            android:layout_width="50dp"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/backred"
+           android:layout_height="30dp" />
+        <ImageButton
+            android:id="@+id/editBtn"
+            android:layout_weight=".5"
+            android:onClick="EditProfileDetails"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/editred"
+           />
+    </RelativeLayout>
 
 <LinearLayout
     android:layout_width="match_parent"
-    android:layout_marginTop="20dp"
     android:layout_height="wrap_content"
-    android:layout_weight=".35"
-    android:layout_marginBottom="30dp"
+    android:layout_weight=".40"
+    android:layout_marginRight="20dp"
+    android:layout_marginLeft="20dp"
+    android:layout_marginBottom="20dp"
     android:orientation="horizontal"
    >
 
@@ -19,22 +43,28 @@
          android:src="@drawable/userimage"
         android:layout_height="match_parent"
         android:layout_width="@dimen/abc_control_inset_material"
-        android:layout_weight=".20"
+        android:layout_marginTop="15dp"
+        android:layout_weight=".35"
         android:scaleType="centerInside"
         android:id="@+id/imageView" />
     <TextView
         android:id="@+id/UserNameTxTView"
         android:layout_width="wrap_content"
-        android:layout_weight=".80"
+        android:layout_weight=".65"
         android:gravity="center"
+        android:textSize="20dp"
+        android:textColor="@color/White"
+        android:layout_margin="10dp"
         android:layout_gravity="center_vertical"
         android:layout_height="wrap_content"
         android:text="User Name"/>
 </LinearLayout>
 <LinearLayout
-    android:layout_weight=".65"
+    android:layout_weight=".60"
     android:layout_width="match_parent"
     android:orientation="vertical"
+    android:layout_marginLeft="20dp"
+    android:layout_marginRight="20dp"
     android:layout_height="wrap_content">
     <LinearLayout
         android:layout_width="fill_parent"
@@ -42,11 +72,15 @@
     <TextView
         android:layout_width="fill_parent"
         android:layout_weight=".75"
+        android:textColor="@color/White"
         android:layout_height="wrap_content"
+        android:textSize="15dp"
         android:text="@string/firstname"/>
+
     <EditText
         android:id="@+id/ETxtFirstName"
         android:layout_weight=".25"
+        android:background="@drawable/bg_form_rounded"
         android:layout_width="fill_parent"
         android:layout_height="40dp"
         android:inputType="text"
@@ -59,10 +93,13 @@
         <TextView
             android:layout_width="fill_parent"
             android:layout_weight=".75"
+            android:textSize="15dp"
+            android:textColor="@color/White"
             android:layout_height="wrap_content"
             android:text="@string/lastname"/>
         <EditText
             android:id="@+id/ETxtLastName"
+            android:background="@drawable/bg_form_rounded"
             android:layout_weight=".25"
             android:layout_width="fill_parent"
             android:layout_height="40dp"
@@ -93,10 +130,13 @@
         <TextView
             android:layout_width="fill_parent"
             android:layout_weight=".75"
+            android:textSize="15dp"
+            android:textColor="@color/White"
             android:layout_height="wrap_content"
             android:text="@string/emailid"/>
         <EditText
             android:id="@+id/ETxtemail"
+            android:background="@drawable/bg_form_rounded"
             android:layout_weight=".25"
             android:layout_width="fill_parent"
             android:layout_height="40dp"
@@ -110,10 +150,13 @@
         <TextView
             android:layout_width="fill_parent"
             android:layout_weight=".75"
+            android:textSize="15dp"
             android:layout_height="wrap_content"
+            android:textColor="@color/White"
             android:text="@string/ProfilephoneNo"/>
         <EditText
             android:id="@+id/ETxtPhone"
+            android:background="@drawable/bg_form_rounded"
             android:layout_weight=".25"
             android:layout_width="fill_parent"
             android:layout_height="40dp"
@@ -121,10 +164,22 @@
             />
     </LinearLayout>
     <LinearLayout
-        android:layout_width="match_parent"
-        android:orientation="horizontal"
-        android:layout_height="wrap_content">
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+
+
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:paddingTop="5dp"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:layout_centerVertical="true"
+
+        >
         <Button
+            android:textColor="@color/White"
             android:id="@+id/SaveBtn"
             android:onClick="SaveProfileDetails"
             android:layout_width="wrap_content"
@@ -132,20 +187,11 @@
             android:layout_marginTop="15dp"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
-            android:layout_weight=".5"
+            android:background="@drawable/bg_button_rounded"
             android:text="@string/savebtn"
-            android:layout_height="40dp" />
-        <Button
-            android:id="@+id/editBtn"
-            android:layout_weight=".5"
-            android:onClick="EditProfileDetails"
-            android:layout_width="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginRight="15dp"
-            android:text="@string/editbtn"
-            android:layout_height="40dp" />
+            android:layout_height="35dp
+            " />
+
     </LinearLayout>
 
 </LinearLayout>

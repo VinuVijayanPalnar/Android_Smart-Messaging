@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 public class Message
 {
         private long id;
-        private boolean isMe;
         private String message;
         private Long userId;
         private Bitmap userImage;
@@ -25,12 +24,6 @@ public class Message
         }
         public void setId(long id) {
             this.id = id;
-        }
-        public boolean getIsme() {
-            return isMe;
-        }
-        public void setMe(boolean isMe) {
-            this.isMe = isMe;
         }
         public String getMessage() {
             return message;

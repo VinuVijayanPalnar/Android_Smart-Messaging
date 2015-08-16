@@ -7,11 +7,16 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Layout;
 import android.text.TextUtils;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 import java.util.Locale;
 
 import DataBaseSQlite.DBAdapter;
@@ -45,9 +50,9 @@ public class SplashActivity extends Activity {
 
                 try {
                     // Thread will sleep for 5 seconds
-                    sleep(100);
+                    sleep(1000);
 
-                    // After 5 seconds redirect to another intent
+                    // After 1 seconds redirect to another intent
 //                    db.open();
 //        Cursor cursor=db.getProfileDetails("vinu");
 //        if(cursor.moveToFirst())
@@ -64,11 +69,13 @@ public class SplashActivity extends Activity {
                     if (!TextUtils.isEmpty(registrationId)) {
                         Intent i = new Intent(applicationContext, MessagingActivity.class);
                         i.putExtra("regId", registrationId);
+                        i.putExtra("IsSqlitePopulated",true);
                         startActivity(i);
                         finish();
                     }else {
                         Intent i = new Intent(applicationContext, RegistrationActivity.class);
                         i.putExtra("regId", registrationId);
+                        i.putExtra("IsSqlitePopulated",false);
                         startActivity(i);
                         finish();
                     }
@@ -83,5 +90,4 @@ public class SplashActivity extends Activity {
         // start thread
         background.start();
     }
-
-    }
+}

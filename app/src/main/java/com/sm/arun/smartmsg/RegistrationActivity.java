@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -56,6 +57,9 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -66,6 +70,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,22 +82,25 @@ import java.util.logging.Logger;
 
 import DataBaseSQlite.DBAdapter;
 import Model.AppUser;
+import Model.AsyncResponse;
 
 import static android.widget.Toast.makeText;
 
 
-public class RegistrationActivity extends Activity {
-//==========================================
+public class RegistrationActivity extends Activity  {
     ProgressDialog prgDialog;
     RequestParams params = new RequestParams();
     GoogleCloudMessaging gcmObj;
     Context applicationContext;
     String regId = "";
+    long UserDbId;
+    boolean isSqlitepopulated;
+
+    AsyncTask<Void, Void, String> createRegIdTask;
     private static String TAG = RegistrationActivity.class.getSimpleName();
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    AsyncTask<Void, Void, String> createRegIdTask;
-
     public static final String REG_ID = "regId";
+    public static final String IS_DB_POPULATE = "IsSqlitePopulated";
     public static final String EMAIL_ID = "eMailId";
     Button RegisterBtn;
     EditText userName,Email;
@@ -102,95 +110,37 @@ public class RegistrationActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.registration_view);
-//        ============================
+        Intent i=getIntent();
+        isSqlitepopulated = i.getBooleanExtra("IsSqlitePopulated",false);
+
         applicationContext = getApplicationContext();
-//        =============
         RegisterBtn=(Button)findViewById(R.id.butnRegister);
         userName=(EditText)findViewById(R.id.ETxtUsername);
         Email=(EditText)findViewById(R.id.ETxtEmail);
         db= new DBAdapter(this);
 //        ================
         prgDialog = new ProgressDialog(this);
-        // Set Progress Dialog Text
         prgDialog.setMessage("Please wait........");
-        // Set Cancelable as False
         prgDialog.setCancelable(false);
 
-
-//        SharedPreferences prefs = getSharedPreferences("UserDetails",
-//                Context.MODE_PRIVATE);
-//        String registrationId = prefs.getString(REG_ID, "");
-//        if (!TextUtils.isEmpty(registrationId)) {
-//            Intent i = new Intent(applicationContext,MessagingActivity.class);
-//            i.putExtra("regId", registrationId);
-//            startActivity(i);
-//            finish();
-//        }
-//        =================
+        SharedPreferences prefs = getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
+        regId = prefs.getString(REG_ID, "");
 
     }
-//    ====================================================================
-    // When Register Me button is clicked
-    public void RegisterUser(View view) {
 
-        String emailID = Email.getText().toString();
-        if (!TextUtils.isEmpty(emailID) && Utility.validate(emailID)) {
-            db.open();
-            String usNme=userName.getText().toString();
-            long Dbid =db.insertProfileDeatils(usNme, emailID, "", "", "");
-            Toast.makeText(RegistrationActivity.this,"Db id:"+Dbid,Toast.LENGTH_LONG).show();
-            db.close();
-            SharedPreferences.Editor editor=getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
-            editor.putString("UserName", userName.getText().toString());
-            editor.putString("Email", Email.getText().toString());
-            editor.putLong("UserId", Dbid);
-            editor.commit();
-            new ServiceTask().execute();
-
-            // Check if Google Play Service is installed in Device
-            // Play services is needed to handle GCM stuffs
-        // ======TO BE UNCOMMENTED============================
-//            if (checkPlayServices()) {
-//
-//                // Register Device in GCM Server
-//                registerInBackground(emailID);
-//            }
-
-        }
-        // When Email is invalid
-        else {
-            Toast.makeText(applicationContext, "Please enter valid email",
-                    Toast.LENGTH_LONG).show();
-        }
-
-
-    }
- private static String convertStreamToString(InputStream is) {
-        /*
-         * To convert the InputStream to String we use the BufferedReader.readLine()
-         * method. We iterate until the BufferedReader return null which means
-         * there's no more data to read. Each line will appended to a StringBuilder
-         * and returned as String.
-         */
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-
-        String line = null;
-        try {
-            while ((line = reader.readLine()) != null) {
-                sb.append(line + "\n");
+  public void RegisterUser(View view) {
+    String emailID = Email.getText().toString();
+        if (!TextUtils.isEmpty(Email.getText().toString()) && Utility.validate(Email.getText().toString())) {
+// ================ Check if Google Play Service is installed in Device Play services is needed to handle GCM stuffs
+             if (checkPlayServices()) {
+              // Register Device in GCM Server
+                registerInBackground(emailID);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } else {
+            Toast.makeText(applicationContext, "Please enter valid email", Toast.LENGTH_LONG).show();
         }
-        return sb.toString();
-    }
+  }
+
 
     // AsyncTask to register Device in GCM Server
     private void registerInBackground(final String emailID) {
@@ -241,75 +191,11 @@ public class RegistrationActivity extends Activity {
         editor.putString(REG_ID, regId);
         editor.putString(EMAIL_ID, emailID);
         editor.commit();
-        storeRegIdinServer();
+        new ServiceTask().execute();
+//        storeRegIdinServer();
 
     }
-
-    // Share RegID with GCM Server Application (Php)
-    private void storeRegIdinServer() {
-        prgDialog.show();
-        params.put("regId", regId);
-        // Make RESTful webservice call using AsyncHttpClient object
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.post("http://192.168.1.172/smartchat/public/getAllUsers", null,
-                new AsyncHttpResponseHandler() {
-                    // When the response returned by REST has Http
-                    // response code '200'
-                    @Override
-                    public void onSuccess(String response) {
-                        // Hide Progress Dialog
-                        Log.e("Response",response);
-                        prgDialog.hide();
-                        if (prgDialog != null) {
-                            prgDialog.dismiss();
-                        }
-                        Toast.makeText(applicationContext,
-                                "Reg Id shared successfully with Web App ",
-                                Toast.LENGTH_LONG).show();
-//                        Intent i = new Intent(applicationContext,
-//                                UserProfileActivity.class);
-//                        i.putExtra("regId", regId);
-//                        startActivity(i);
-                        finish();
-                    }
-
-                    // When the response returned by REST has Http
-                    // response code other than '200' such as '404',
-                    // '500' or '403' etc
-                    @Override
-                    public void onFailure(int statusCode, Throwable error,
-                                          String content) {
-                        // Hide Progress Dialog
-                        Log.e("Response",error.getMessage());
-                        prgDialog.hide();
-                        if (prgDialog != null) {
-                            prgDialog.dismiss();
-                        }
-                        // When Http response code is '404'
-                        if (statusCode == 404) {
-                            Toast.makeText(applicationContext,
-                                    "Requested resource not found",
-                                    Toast.LENGTH_LONG).show();
-                        }
-                        // When Http response code is '500'
-                        else if (statusCode == 500) {
-                            Toast.makeText(applicationContext,
-                                    "Something went wrong at server end",
-                                    Toast.LENGTH_LONG).show();
-                        }
-                        // When Http response code other than 404, 500
-                        else {
-                            Toast.makeText(
-                                    applicationContext,
-                                    "Unexpected Error occcured! [Most common Error: Device might "
-                                            + "not be connected to Internet or remote server is not up and running], check for other errors as well",
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-    }
-
-    // Check if Google Playservices is installed in Device or not
+//    ===== Check if Google Playservices is installed in Device or not
     private boolean checkPlayServices() {
         int resultCode = GooglePlayServicesUtil
                 .isGooglePlayServicesAvailable(this);
@@ -342,132 +228,141 @@ public class RegistrationActivity extends Activity {
         super.onResume();
         checkPlayServices();
     }
-//    =====================================================================================================
-       public static List<AppUser> Users =new List<AppUser>() {
-    @Override
-    public void add(int location, AppUser object) {
+    private void GetUser(String UserName) {
+        new AsyncTask<String, Void, String>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+            @Override
+            protected String doInBackground(String... params) {
+
+                BufferedReader br = null;
+                StringBuilder sb = new StringBuilder("");
+                HttpURLConnection c = null;
+                try {
+                    URL u = new URL("http://192.168.1.130/smartchat/public/getUser?username="+userName.getText().toString());
+                    c = (HttpURLConnection) u.openConnection();
+                    c.setRequestMethod("GET");
+                    c.setRequestProperty("Content-length", "0");
+                    c.setRequestProperty("Content-Type", "application/json");
+                    c.setUseCaches(false);
+                    c.setAllowUserInteraction(false);
+                    c.connect();
+                    int status = c.getResponseCode();
+                    switch (status) {
+                        case 200:
+                        case 201:
+                            br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+                            sb = new StringBuilder();
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                sb.append(line + "\n");
+                            }
+                            br.close();
+                            return sb.toString();
+                    }
+                     }catch (ConnectException e) {
+                    Log.e("Exception Caught", e.getMessage());
+//            Toast.makeText(RegistrationActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+                    sb.append(e.getMessage());
+                    return sb.toString();
+
+                }
+                catch (MalformedURLException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
+                } catch (IOException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
+                } finally {
+                    if (c != null) {
+                        try {
+                            c.disconnect();
+                        } catch (Exception ex) {
+                            Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                            sb.append(ex.getMessage());
+                            return sb.toString();
+                        }
+                    }
+
+                }
+                return sb.toString();
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                boolean isjason=isJSONValid(result);
+                if(isjason) {
+                    try {
+                        JSONObject jsObj = new JSONObject(result.toString());
+                        db.open();
+                        if(!db.checkBeforeInsert(jsObj.getString("username"))) {
+                            UserDbId=  db.insertProfileDeatils(jsObj.getString("username"), jsObj.getString("email"),
+                                    jsObj.getString("first_name"), jsObj.getString("last_name"), jsObj.getString("mobile_number"), jsObj.getString("photo"));
+                            Toast.makeText(RegistrationActivity.this, "Db id:" + UserDbId, Toast.LENGTH_LONG).show();
+
+                        }
+                        else{
+                            SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
+                            UserDbId=Preferences.getLong("UserId", 0);
+                            boolean undate=db.updateprofile(UserDbId, jsObj.getString("first_name"),jsObj.getString("last_name"),Long.parseLong(jsObj.getString("mobile_number")), jsObj.getString("photo"));
+                        }
+                        db.close();
+                        SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
+                        editor.putString("UserName", userName.getText().toString());
+                        editor.putString("Email", Email.getText().toString());
+                        editor.putLong("UserId", UserDbId);
+                        editor.commit();
+//                        exportDatabse("MyDB", applicationContext);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        System.out.println("JSon Exception occured");
+                    }
+                }else {
+                    Toast.makeText(RegistrationActivity.this, result, Toast.LENGTH_LONG).show();
+                }
+
+            }
+        }.execute();
 
     }
+    public static void exportDatabse(String databaseName,Context context) {
+        try {
 
-    @Override
-    public boolean add(AppUser object) {
-        return false;
+
+            System.out.println("Enter ");
+            File sd = Environment.getExternalStorageDirectory();
+            File data = Environment.getDataDirectory();
+
+            if (sd.canWrite()) {
+                String currentDBPath = "/data/"+context.getPackageName()+"/databases/"+databaseName+"";
+                String backupDBPath = "backMyDb.db";
+                File currentDB = new File(data, currentDBPath);
+                File backupDB = new File(sd.getAbsoluteFile()+"/", backupDBPath);
+
+                if (currentDB.exists()) {
+                    FileChannel src = new FileInputStream(currentDB).getChannel();
+                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                    dst.transferFrom(src, 0, src.size());
+                    src.close();
+                    dst.close();
+
+                    System.out.println("Done exis");
+
+                }
+            }
+
+            System.out.println("Done ");
+        } catch (Exception e) {
+            System.out.println("EX Done ");
+        }
     }
-
-    @Override
-    public boolean addAll(int location, Collection<? extends AppUser> collection) {
-        return false;
-    }
-
-    @Override
-    public boolean addAll(Collection<? extends AppUser> collection) {
-        return false;
-    }
-
-    @Override
-    public void clear() {
-
-    }
-
-    @Override
-    public boolean contains(Object object) {
-        return false;
-    }
-
-    @Override
-    public boolean containsAll(Collection<?> collection) {
-        return false;
-    }
-
-    @Override
-    public AppUser get(int location) {
-        return null;
-    }
-
-    @Override
-    public int indexOf(Object object) {
-        return 0;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return false;
-    }
-
-    @NonNull
-    @Override
-    public Iterator<AppUser> iterator() {
-        return null;
-    }
-
-    @Override
-    public int lastIndexOf(Object object) {
-        return 0;
-    }
-
-    @NonNull
-    @Override
-    public ListIterator<AppUser> listIterator() {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public ListIterator<AppUser> listIterator(int location) {
-        return null;
-    }
-
-    @Override
-    public AppUser remove(int location) {
-        return null;
-    }
-
-    @Override
-    public boolean remove(Object object) {
-        return false;
-    }
-
-    @Override
-    public boolean removeAll(Collection<?> collection) {
-        return false;
-    }
-
-    @Override
-    public boolean retainAll(Collection<?> collection) {
-        return false;
-    }
-
-    @Override
-    public AppUser set(int location, AppUser object) {
-        return null;
-    }
-
-    @Override
-    public int size() {
-        return 0;
-    }
-
-    @NonNull
-    @Override
-    public List<AppUser> subList(int start, int end) {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public Object[] toArray() {
-        return new Object[0];
-    }
-
-    @NonNull
-    @Override
-    public <T> T[] toArray(T[] array) {
-        return null;
-    }
-};
-
     public class ServiceTask extends AsyncTask<String, Void, String> {
- @Override
+@Override
     protected void onPreExecute() {
         super.onPreExecute();
     }
@@ -479,8 +374,7 @@ public class RegistrationActivity extends Activity {
 
         HttpURLConnection c = null;
         try {
-// URL u = new URL("http://192.168.1.172/smartchat/public/loginCheck?username="+userName.getText().toString()+"&password="+Email.getText().toString()+"");
-            URL u = new URL("http://192.168.1.172/smartchat/public/addUser?username="+userName.getText().toString()+"&email="+Email.getText().toString()+"&first_name=sa&last_name=a&mobile_number=1&user_group_id=1&device_type_id=2&device_id=xxyyrryyxx&is_verified=1&photo=aacccccc");
+            URL u = new URL("http://192.168.1.130/smartchat/public/addUser?username="+userName.getText().toString()+"&email="+Email.getText().toString()+"&first_name=sa&last_name=a&mobile_number=1&user_group_id=1&device_type_id=2&device_id="+regId+"&is_verified=1&photo=aacccccc");
 
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
@@ -501,26 +395,42 @@ public class RegistrationActivity extends Activity {
                     }
                     br.close();
                     return sb.toString();
+
+                case 404:
+                    sb.append("Requested resource not found");
+                    return sb.toString();
+                case 500:
+                    sb.append("Something went wrong at server end");
+                    return sb.toString();
+
+
             }
 
         }catch (ConnectException e) {
-        Log.e("Exception Caught", e.getMessage());
-            Toast.makeText(RegistrationActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+            Log.e("Exception Caught", e.getMessage());
+//            Toast.makeText(RegistrationActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+            sb.append(e.getMessage());
+            return sb.toString();
 
         }
         catch (MalformedURLException ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
-            Toast.makeText(applicationContext, ex.getCause().toString(), Toast.LENGTH_LONG).show();
-            onPostExecute(null);
-        } catch (IOException ex) {
+//            Toast.makeText(applicationContext, ex.getCause().toString(), Toast.LENGTH_LONG).show();
+            sb.append(ex.getMessage());
+            return sb.toString();
+         } catch (IOException ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
-            Toast.makeText(applicationContext, ex.getCause().toString(), Toast.LENGTH_LONG).show();
+//            Toast.makeText(applicationContext, ex.getCause().toString(), Toast.LENGTH_LONG).show();
+//            sb.append(ex.getMessage());
+//            return sb.toString();
          } finally {
             if (c != null) {
                 try {
                     c.disconnect();
                 } catch (Exception ex) {
                     Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
                 }
              }
 
@@ -530,12 +440,12 @@ public class RegistrationActivity extends Activity {
 
     @Override
     protected void onPostExecute(String result) {
-        if (result == "")
-            return;
-        else
-        try {
+       boolean isjason=isJSONValid(result);
+        String Status="";
+        if(isjason) {
+            try {
                 JSONObject jsObj = new JSONObject(result.toString());
-                String Status = jsObj.getString("Status_Msg");
+                Status = jsObj.getString("Status_Msg");
                 switch (Status) {
                     case "1000":
                         Toast.makeText(RegistrationActivity.this, "UserName Already Exists", Toast.LENGTH_LONG).show();
@@ -544,32 +454,91 @@ public class RegistrationActivity extends Activity {
                         Toast.makeText(RegistrationActivity.this, "Email Id Already Exists", Toast.LENGTH_LONG).show();
                         break;
                     case "1002"://===MAKE SERVER CALL TO FETCH USER DETAILS MESSAGES ADMIN DETAILS ANS SO=====
+                    if(!isSqlitepopulated) {
+                        GetUser(userName.getText().toString());
+
+                        try {
+                            copyAppDbToDownloadFolder();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
                         Toast.makeText(RegistrationActivity.this, "Registered User", Toast.LENGTH_LONG).show();
                         Intent myIntend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
-                        myIntend.putExtra("USR_Nme", userName.getText().toString());
+                        myIntend.putExtra("ShouldRetrieveOldMsg", true);
                         myIntend.putExtra("EMAIL", Email.getText().toString());
                         startActivity(myIntend);
-//                                finish();
+                        finish();
                         break;
-                    case "Ok":
+                    case "OK":
+                        db.open();
+                        long Dbid = db.insertProfileDeatils(userName.getText().toString(), Email.getText().toString(), "", "", "","");
+                        Toast.makeText(RegistrationActivity.this, "Db id:" + Dbid, Toast.LENGTH_LONG).show();
+                        db.close();
+                        try {
+                            copyAppDbToDownloadFolder();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
+                        editor.putString("UserName", userName.getText().toString());
+                        editor.putString("Email", Email.getText().toString());
+                        editor.putLong("UserId", Dbid);
+                        editor.commit();
                         Intent Intend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
+                        Intend.putExtra("ShouldRetrieveOldMsg", false);
                         Intend.putExtra("USR_Nme", userName.getText().toString());
                         Intend.putExtra("EMAIL", Email.getText().toString());
                         startActivity(Intend);
 //                                finish();
                         break;
-                    case "NOk":
+                    case "NOK":
                         Toast.makeText(RegistrationActivity.this, "Registration Failed", Toast.LENGTH_LONG).show();
                         break;
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
                 System.out.println("JSon Exception occured");
+            }finally {
+//                deligate.processFinish(Status);
             }
+        }
+        else{
+            Toast.makeText(RegistrationActivity.this, result, Toast.LENGTH_LONG).show();
+//            deligate.processFinish(result);
+        }
 
 
     }
 }
+    public void copyAppDbToDownloadFolder() throws IOException {
+        File backupDB = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "MyDBbackup.db"); // for example "my_data_backup.db"
+        File currentDB = getApplicationContext().getDatabasePath("MyDb.db"); //databaseName=your current application database name, for example "my_data.db"
+        if (currentDB.exists()) {
+            FileChannel src = new FileInputStream(currentDB).getChannel();
+            FileChannel dst = new FileOutputStream(backupDB).getChannel();
+            dst.transferFrom(src, 0, src.size());
+            src.close();
+            dst.close();
+        }
+    }
+    public boolean isJSONValid(String test) {
+        try {
+            new JSONObject(test);
+        } catch (JSONException ex) {
+            // edited, to include @Arthur's comment
+            // e.g. in case JSONArray is valid as well...
+            try {
+                new JSONArray(test);
+            } catch (JSONException ex1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
     public static Bitmap decodeBase64(String input)
     {
         try {
@@ -595,6 +564,7 @@ public class RegistrationActivity extends Activity {
             return "" ;
         }
     }
+
 
 
 }

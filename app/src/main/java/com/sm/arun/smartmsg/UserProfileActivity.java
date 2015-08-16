@@ -24,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -66,14 +67,17 @@ import Model.AppUser;
  */
 public class UserProfileActivity extends Activity{
     private static final String MY_PREFS_NAME = "MyPrefs";
+    public static final String REG_ID = "regId";
     ImageView ImageV;
     EditText FrstName,LstName,PhoneNo,Email;
     TextView UserName;
     Bitmap UserImage;
-    Button Save,Edit;
+    Button Save;
+    ImageButton Edit,Backbtn;
     long DbId=-1;
     DBAdapter db;
-    String Username,email;
+
+    String Username,email,regId;
     String encoded_image="No image";
     private static final int SELECT_PHOTO = 100;
     private static final int CAMERA_REQUEST=1888;
@@ -93,12 +97,15 @@ public class UserProfileActivity extends Activity{
         Email=(EditText)findViewById(R.id.ETxtemail);
         PhoneNo=(EditText)findViewById(R.id.ETxtPhone);
         Save=(Button)findViewById(R.id.SaveBtn);
-        Edit=(Button)findViewById(R.id.editBtn);
+        Edit=(ImageButton)findViewById(R.id.editBtn);
 
         SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
         Username=Preferences.getString("UserName", "");
         email=Preferences.getString("Email","");
         DbId=Preferences.getLong("UserId", 0);
+        SharedPreferences prefs = getSharedPreferences("UserDetails",Context.MODE_PRIVATE);
+        regId = prefs.getString(REG_ID, "");
+
         registerForContextMenu(ImageV);
         if(!Username.equalsIgnoreCase("")) {
             UserName.setText(Username.toString());
@@ -144,6 +151,12 @@ public class UserProfileActivity extends Activity{
         PhoneNo.setEnabled(false);
         ImageV.setEnabled(false);
         Save.setEnabled(false);
+    }
+    public void BackToMessages(View view){
+        Intent i = new Intent(UserProfileActivity.this, MessagingActivity.class);
+        i.putExtra("regId", regId);
+        startActivity(i);
+        finish();
     }
     public  void SaveProfileDetails(View view) {
         db.open();
@@ -394,7 +407,7 @@ public class UserProfileActivity extends Activity{
                     int timeout=30;
                     if(UserImage!=null)
                     encoded_image=encodeTobase64(UserImage);
-                    URL u = new URL("http://192.168.1.172/smartchat/public/editUser");
+                    URL u = new URL("http://192.168.1.130/smartchat/public/editUser");
                     c = (HttpURLConnection) u.openConnection();
                     c.setRequestMethod("POST");
                     // c.setRequestProperty("Content-length", "0");
