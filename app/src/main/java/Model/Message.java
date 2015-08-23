@@ -9,15 +9,24 @@ public class Message
 {
         private long id;
         private String message;
-        private Long userId;
-        private Bitmap userImage;
+        private int adminId;
+        private String adminName;
+        private Bitmap adminImage;
         private String dateTime;
 
-    public Bitmap getuserImage() {
-        return userImage;
+    public String getAdminName()
+    {
+        return adminName;
     }
-    public void setuserImage(Bitmap userImage) {
-        this.userImage = userImage;
+    public void setAdminName(String adminname) {
+        this.adminName = adminname;
+    }
+    public Bitmap getAdminImage()
+    {
+        return adminImage;
+    }
+    public void setAdminImage(Bitmap userImage) {
+        this.adminImage = userImage;
     }
         public long getId() {
             return id;
@@ -31,12 +40,12 @@ public class Message
         public void setMessage(String message) {
             this.message = message;
         }
-        public long getUserId() {
-            return userId;
+        public int getAdminId() {
+            return adminId;
         }
 
-        public void setUserId(long userId) {
-            this.userId = userId;
+        public void setAdminId(int userId) {
+            this.adminId = userId;
         }
 
         public String getDate() {

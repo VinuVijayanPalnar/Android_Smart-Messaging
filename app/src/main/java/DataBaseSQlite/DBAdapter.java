@@ -255,22 +255,49 @@ public class DBAdapter {
 
     //--------------------RETRIEVE ALL MESSAGES-------------------------------
     public Cursor getAllMessages()
-    { String query = " SELECT * FROM pushMessages";
-        Cursor mCursor = db.rawQuery(query, new String[]{},null);
+    {
+        Cursor mCursor=db.rawQuery("SELECT * FROM pushMessages, senderDetails " +
+            "WHERE pushMessages.adminid = senderDetails.senderId " +
+            "GROUP BY pushMessages.date", null);
+
+//        String query = " SELECT * FROM pushMessages";
+//        Cursor mCursor = db.rawQuery(query, new String[]{},null);
 //        Cursor  mCursor=db.query(TABLE_MESSAGES, new String[] {KEY_MROWID, KEY_MESSAGE,
 //                KEY_ADMIN_NAME, KEY_ADMIN_ID,KEY_DATE}, null, null, null, null, KEY_DATE + " DESC");
         if (mCursor != null) {
             mCursor.moveToFirst();
-            Log.e("mCursor", mCursor.getString(0));
-            Log.e("mCursor", mCursor.getString(1));
-            Log.e("mCursor", mCursor.getString(2));
-//            Log.e("mCursor", mCursor.getString(3));
-//            Log.e("mCursor", mCursor.getString(4));
+            Log.e("M_id", mCursor.getString(0));
+            Log.e("date", mCursor.getString(1));
+            Log.e("message", mCursor.getString(2));
+//            Log.e("adminid", mCursor.getString(3));
+//            Log.e("adminName", mCursor.getString(4));
+//            Log.e("adminImage", mCursor.getString(5));
+
+
         }
         return  mCursor;
 
     }
     //--------------------RETRIEVE A PERTICULAR Message table-------------------------------
+
+    public boolean IsMessagesAvailable() {
+        Cursor cursor=null;
+        try {
+            cursor = db.rawQuery("SELECT * FROM"+ TABLE_MESSAGES, new String[]{},null);
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+
+        if(cursor.getCount()<=0){
+            Log.e("mCursor", "no item");
+            return false;
+        }
+        else{
+            Log.e("Check if present", "true");
+            return true;
+        }
+
+    }
 
     public  Cursor getMessages(String adminname)throws SQLException {
         String query = "select * from pushMessages where adminName ="+ adminname;

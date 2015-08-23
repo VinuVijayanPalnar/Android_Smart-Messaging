@@ -21,71 +21,31 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.google.android.gms.appdatasearch.GetRecentContextCall;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpProtocolParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import DataBaseSQlite.DBAdapter;
-import Model.AppUser;
-import Model.AsyncResponse;
-
-import static android.widget.Toast.makeText;
-
+import DataBaseSQlite.DatabaseOperations;
+import DataBaseSQlite.TableData;
 
 public class RegistrationActivity extends Activity  {
     ProgressDialog prgDialog;
@@ -104,6 +64,7 @@ public class RegistrationActivity extends Activity  {
     public static final String EMAIL_ID = "eMailId";
     Button RegisterBtn;
     EditText userName,Email;
+    DatabaseOperations Db;
     DBAdapter db;
     public static final String MY_PREFS_NAME = "MyPrefs";
     @Override
@@ -117,8 +78,9 @@ public class RegistrationActivity extends Activity  {
         RegisterBtn=(Button)findViewById(R.id.butnRegister);
         userName=(EditText)findViewById(R.id.ETxtUsername);
         Email=(EditText)findViewById(R.id.ETxtEmail);
+        Db=new DatabaseOperations(applicationContext);
         db= new DBAdapter(this);
-//        ================
+
         prgDialog = new ProgressDialog(this);
         prgDialog.setMessage("Please wait........");
         prgDialog.setCancelable(false);
@@ -131,7 +93,7 @@ public class RegistrationActivity extends Activity  {
   public void RegisterUser(View view) {
     String emailID = Email.getText().toString();
         if (!TextUtils.isEmpty(Email.getText().toString()) && Utility.validate(Email.getText().toString())) {
-// ================ Check if Google Play Service is installed in Device Play services is needed to handle GCM stuffs
+// === Check if Google Play Service is installed in Device Play services is needed to handle GCM stuffs
              if (checkPlayServices()) {
               // Register Device in GCM Server
                 registerInBackground(emailID);
@@ -241,7 +203,7 @@ public class RegistrationActivity extends Activity  {
                 StringBuilder sb = new StringBuilder("");
                 HttpURLConnection c = null;
                 try {
-                    URL u = new URL("http://192.168.1.130/smartchat/public/getUser?username="+userName.getText().toString());
+                    URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/getUser?username="+userName.getText().toString());
                     c = (HttpURLConnection) u.openConnection();
                     c.setRequestMethod("GET");
                     c.setRequestProperty("Content-length", "0");
@@ -298,25 +260,22 @@ public class RegistrationActivity extends Activity  {
                 if(isjason) {
                     try {
                         JSONObject jsObj = new JSONObject(result.toString());
-                        db.open();
-                        if(!db.checkBeforeInsert(jsObj.getString("username"))) {
-                            UserDbId=  db.insertProfileDeatils(jsObj.getString("username"), jsObj.getString("email"),
-                                    jsObj.getString("first_name"), jsObj.getString("last_name"), jsObj.getString("mobile_number"), jsObj.getString("photo"));
-                            Toast.makeText(RegistrationActivity.this, "Db id:" + UserDbId, Toast.LENGTH_LONG).show();
+                        if(!Db.IsUserPresent(Db,jsObj.getString("username"))){
 
+                        Db.InsertUserDetails(Db,jsObj.getString("username"), jsObj.getString("email"),
+                                    jsObj.getString("first_name"), jsObj.getString("last_name"), jsObj.getString("mobile_number"), jsObj.getString("photo"));
                         }
                         else{
                             SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
-                            UserDbId=Preferences.getLong("UserId", 0);
-                            boolean undate=db.updateprofile(UserDbId, jsObj.getString("first_name"),jsObj.getString("last_name"),Long.parseLong(jsObj.getString("mobile_number")), jsObj.getString("photo"));
-                        }
-                        db.close();
-                        SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
+                            Long ph_No=Long.parseLong(jsObj.getString("mobile_number"));
+                            Db.UpdateUserDetails(Db, jsObj.getString("username"), jsObj.getString("first_name"), jsObj.getString("last_name"), ph_No, jsObj.getString("photo"));
+                      }
+                      SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
                         editor.putString("UserName", userName.getText().toString());
                         editor.putString("Email", Email.getText().toString());
                         editor.putLong("UserId", UserDbId);
                         editor.commit();
-//                        exportDatabse("MyDB", applicationContext);
+                        exportDatabse(TableData.TableInfo.DATABASE_NAME, applicationContext);
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -374,7 +333,7 @@ public class RegistrationActivity extends Activity  {
 
         HttpURLConnection c = null;
         try {
-            URL u = new URL("http://192.168.1.130/smartchat/public/addUser?username="+userName.getText().toString()+"&email="+Email.getText().toString()+"&first_name=sa&last_name=a&mobile_number=1&user_group_id=1&device_type_id=2&device_id="+regId+"&is_verified=1&photo=aacccccc");
+            URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/addUser?username="+userName.getText().toString()+"&email="+Email.getText().toString()+"&first_name=sa&last_name=a&mobile_number=1&user_group_id=1&device_type_id=2&device_id="+regId+"&is_verified=1&photo=aacccccc");
 
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("GET");
@@ -454,44 +413,30 @@ public class RegistrationActivity extends Activity  {
                         Toast.makeText(RegistrationActivity.this, "Email Id Already Exists", Toast.LENGTH_LONG).show();
                         break;
                     case "1002"://===MAKE SERVER CALL TO FETCH USER DETAILS MESSAGES ADMIN DETAILS ANS SO=====
-                    if(!isSqlitepopulated) {
+                    if(!isSqlitepopulated)
                         GetUser(userName.getText().toString());
 
-                        try {
-                            copyAppDbToDownloadFolder();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
                         Toast.makeText(RegistrationActivity.this, "Registered User", Toast.LENGTH_LONG).show();
-                        Intent myIntend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
+                        Intent myIntend = new Intent(applicationContext, ConfirmationActivity.class);
                         myIntend.putExtra("ShouldRetrieveOldMsg", true);
                         myIntend.putExtra("EMAIL", Email.getText().toString());
                         startActivity(myIntend);
                         finish();
                         break;
                     case "OK":
-                        db.open();
-                        long Dbid = db.insertProfileDeatils(userName.getText().toString(), Email.getText().toString(), "", "", "","");
-                        Toast.makeText(RegistrationActivity.this, "Db id:" + Dbid, Toast.LENGTH_LONG).show();
-                        db.close();
-                        try {
-                            copyAppDbToDownloadFolder();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        Db.InsertUserDetails(Db,userName.getText().toString(), Email.getText().toString(),null,null,null,null);
+                        Toast.makeText(applicationContext, "Db id:" + "Registration Successful", Toast.LENGTH_LONG).show();
+
                         SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
                         editor.putString("UserName", userName.getText().toString());
                         editor.putString("Email", Email.getText().toString());
-                        editor.putLong("UserId", Dbid);
                         editor.commit();
                         Intent Intend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
                         Intend.putExtra("ShouldRetrieveOldMsg", false);
                         Intend.putExtra("USR_Nme", userName.getText().toString());
                         Intend.putExtra("EMAIL", Email.getText().toString());
                         startActivity(Intend);
-//                                finish();
+                        finish();
                         break;
                     case "NOK":
                         Toast.makeText(RegistrationActivity.this, "Registration Failed", Toast.LENGTH_LONG).show();
@@ -505,25 +450,14 @@ public class RegistrationActivity extends Activity  {
             }
         }
         else{
-            Toast.makeText(RegistrationActivity.this, result, Toast.LENGTH_LONG).show();
+            Toast.makeText(applicationContext, result, Toast.LENGTH_LONG).show();
 //            deligate.processFinish(result);
         }
 
 
     }
 }
-    public void copyAppDbToDownloadFolder() throws IOException {
-        File backupDB = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "MyDBbackup.db"); // for example "my_data_backup.db"
-        File currentDB = getApplicationContext().getDatabasePath("MyDb.db"); //databaseName=your current application database name, for example "my_data.db"
-        if (currentDB.exists()) {
-            FileChannel src = new FileInputStream(currentDB).getChannel();
-            FileChannel dst = new FileOutputStream(backupDB).getChannel();
-            dst.transferFrom(src, 0, src.size());
-            src.close();
-            dst.close();
-        }
-    }
-    public boolean isJSONValid(String test) {
+ public boolean isJSONValid(String test) {
         try {
             new JSONObject(test);
         } catch (JSONException ex) {

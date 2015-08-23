@@ -85,24 +85,24 @@ public class MessagingActivity extends Activity {
 //        initControls();
 
         Msgs = new ArrayList<MessageListModel>();
-        db.open();
-        Cursor cursor = db.getAllMessages();
-        if (cursor.moveToFirst()) {
-            do {
-
-                Toast.makeText(this, "id:" + cursor.getString(0) + "/n" + "User Name:" + cursor.getString(1) + "/n" + "Emailid:" + cursor.getString(2) + "/n" +
-                        "First Name:" + cursor.getString(3) + "/n" + "LastName:" + cursor.getString(4) + "/n" + "Phone No" + cursor.getString(5) + "/n" + "photo:" + cursor.getString(6), Toast.LENGTH_LONG).show();
-                int msgId = cursor.getInt(0);
-                String msg = cursor.getString(2);
-                String adminName = cursor.getString(3);
-                int AdminId = cursor.getInt(4);
-                String dateTime = cursor.getString(5);
-                MessageListModel modl = new MessageListModel();
-
-//                modl.SectionHeader=
-            } while (cursor.moveToNext());
-        }
-        db.close();
+//        db.open();
+//        Cursor cursor = db.getAllMessages();
+//        if (cursor.moveToFirst()) {
+//            do {
+//
+//                Toast.makeText(this, "id:" + cursor.getString(0) + "/n" + "User Name:" + cursor.getString(1) + "/n" + "Emailid:" + cursor.getString(2) + "/n" +
+//                        "First Name:" + cursor.getString(3) + "/n" + "LastName:" + cursor.getString(4) + "/n" + "Phone No" + cursor.getString(5) + "/n" + "photo:" + cursor.getString(6), Toast.LENGTH_LONG).show();
+//                int msgId = cursor.getInt(0);
+//                String msg = cursor.getString(2);
+//                String adminName = cursor.getString(3);
+//                int AdminId = cursor.getInt(4);
+//                String dateTime = cursor.getString(5);
+//                MessageListModel modl = new MessageListModel();
+//
+////                modl.SectionHeader=
+//            } while (cursor.moveToNext());
+//        }
+//        db.close();
         exportDatabse("MyDB",MessagingActivity.this);
         // Check if Google Play Service is installed in Device
         // Play services is needed to handle GCM stuffs
@@ -151,12 +151,12 @@ public class MessagingActivity extends Activity {
 //    finish();
     }
 
-    public void displayMessage(Message message) {
-        if (adapter == null)
-            adapter.add(message);
-        adapter.notifyDataSetChanged();
-        scroll();
-    }
+//    public void displayMessage(Message message) {
+//        if (adapter == null)
+//            adapter.add(message);
+//        adapter.notifyDataSetChanged();
+//        scroll();
+//    }
 
     private void scroll() {
         messagesContainer.setSelection(messagesContainer.getCount() - 1);
@@ -179,12 +179,12 @@ public class MessagingActivity extends Activity {
         msg1.setDate(DateFormat.getDateTimeInstance().format(new Date()));
         chatHistory.add(msg1);
 
-        adapter = new MessageAdaptor((Activity) getApplicationContext(), new ArrayList<Message>());
+        adapter = new MessageAdaptor(getApplicationContext(), new ArrayList<MessageListModel>());
         messagesContainer.setAdapter(adapter);
 
         for (int i = 0; i < chatHistory.size(); i++) {
             Message message = chatHistory.get(i);
-            displayMessage(message);
+//            displayMessage(message);
         }
     }
 
@@ -239,9 +239,7 @@ public class MessagingActivity extends Activity {
     }
     public static void exportDatabse(String databaseName,Context context) {
         try {
-
-
-            System.out.println("Enter ");
+System.out.println("Enter ");
             File sd = Environment.getExternalStorageDirectory();
             File data = Environment.getDataDirectory();
 

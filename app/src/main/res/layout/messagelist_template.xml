@@ -30,7 +30,7 @@
             android:layout_height="30dp"
             android:layout_gravity="center|center_vertical"
             android:textSize="13sp"
-            android:text="hhhh"
+            android:text="date"
             android:textColor="@android:color/darker_gray" />
 
         <LinearLayout
