@@ -6,10 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,9 +26,20 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ConnectException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -33,8 +49,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import DataBaseSQlite.DBAdapter;
+import DataBaseSQlite.DatabaseOperations;
+import DataBaseSQlite.TableData;
 import Model.Message;
 import Model.MessageAdaptor;
 import Model.MessageListModel;
@@ -49,10 +69,13 @@ public class MessagingActivity extends Activity {
 
     private ListView messagesContainer;
     private Button ProfDetails;
+    Context applicationcontext;
+    DatabaseOperations Db;
     private MessageAdaptor adapter;
     private ArrayList<Message> chatHistory;
     private ArrayList<MessageListModel> Msgs;
-    String regId;
+    int AdminId;
+    String regId,AdminName,AdminImage;
     DBAdapter db;
 
     @Override
@@ -60,6 +83,8 @@ public class MessagingActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.message_layout);
         db = new DBAdapter(this);
+        applicationcontext=getApplicationContext();
+        Db=new DatabaseOperations(applicationcontext);
         SharedPreferences prefs = getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
         regId = prefs.getString("regId", "");
         // Intent Message sent from Broadcast Receiver
@@ -85,24 +110,44 @@ public class MessagingActivity extends Activity {
 //        initControls();
 
         Msgs = new ArrayList<MessageListModel>();
-//        db.open();
-//        Cursor cursor = db.getAllMessages();
-//        if (cursor.moveToFirst()) {
-//            do {
-//
-//                Toast.makeText(this, "id:" + cursor.getString(0) + "/n" + "User Name:" + cursor.getString(1) + "/n" + "Emailid:" + cursor.getString(2) + "/n" +
-//                        "First Name:" + cursor.getString(3) + "/n" + "LastName:" + cursor.getString(4) + "/n" + "Phone No" + cursor.getString(5) + "/n" + "photo:" + cursor.getString(6), Toast.LENGTH_LONG).show();
-//                int msgId = cursor.getInt(0);
-//                String msg = cursor.getString(2);
-//                String adminName = cursor.getString(3);
-//                int AdminId = cursor.getInt(4);
-//                String dateTime = cursor.getString(5);
-//                MessageListModel modl = new MessageListModel();
-//
-////                modl.SectionHeader=
-//            } while (cursor.moveToNext());
-//        }
-//        db.close();
+        chatHistory= new ArrayList<Message>();
+        Cursor Cr=Db.GetAllMessages(Db);
+        if(Cr!=null && Cr.moveToFirst())
+        {
+            do{
+                Message SingleMsg= new Message();
+                SingleMsg.setAdminId(Cr.getInt(0));
+                SingleMsg.setAdminName(Cr.getString(1));
+                SingleMsg.setMessage(Cr.getString(2));
+                SingleMsg.setDate(Cr.getString(3));
+                chatHistory.add(SingleMsg);
+
+            }while (Cr.moveToNext());
+        }
+        Cr.close();
+        Db.close();
+// Fetch all admin Details in one go and save in DB
+        for (Message msg : chatHistory) {
+
+           AdminImage=Db.GetAdminPhoto(Db,Integer.toString(msg.getAdminId()));
+            if(AdminImage==null)
+            {
+                AdminName=msg.getAdminName();
+                AdminId=msg.getAdminId();
+                FetchAdminPhoto();
+                // Issue: The fetched image is not being inserted into the arraylist
+            }else{
+                Bitmap img=decodeBase64(AdminImage);
+                if(img!=null)
+                    msg.setAdminImage(img);
+            }
+        }
+        adapter = new MessageAdaptor(getApplicationContext(), new ArrayList<Message>());
+        messagesContainer.setAdapter(adapter);
+        for (int i = 0; i < chatHistory.size(); i++) {
+            Message msg = chatHistory.get(i);
+            displayMessage(msg);
+        }
         exportDatabse("MyDB",MessagingActivity.this);
         // Check if Google Play Service is installed in Device
         // Play services is needed to handle GCM stuffs
@@ -115,6 +160,115 @@ public class MessagingActivity extends Activity {
 
 
     }
+    public static Bitmap decodeBase64(String input)
+    {
+        try {
+            byte[] decodedByte = Base64.decode(input, 0);
+            return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+        }catch (IllegalArgumentException e){
+            return null;
+        }
+    }
+    private void FetchAdminPhoto() {
+        new AsyncTask<String, Void, String>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+            @Override
+            protected String doInBackground(String... params) {
+
+                BufferedReader br = null;
+                StringBuilder sb = new StringBuilder("");
+                HttpURLConnection c = null;
+                try {
+                    URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/getAdminUserPhotoByUsername?adminUsername="+AdminName);
+                    c = (HttpURLConnection) u.openConnection();
+                    c.setRequestMethod("GET");
+                    c.setRequestProperty("Content-length", "0");
+                    c.setRequestProperty("Content-Type", "application/json");
+                    c.setUseCaches(false);
+                    c.setAllowUserInteraction(false);
+                    c.connect();
+                    int status = c.getResponseCode();
+                    switch (status) {
+                        case 200:
+                        case 201:
+                            br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+                            sb = new StringBuilder();
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                sb.append(line + "\n");
+                            }
+                            br.close();
+                            return sb.toString();
+                    }
+                }catch (ConnectException e) {
+                    Log.e("Exception Caught", e.getMessage());
+                    sb.append(e.getMessage());
+                    return sb.toString();
+
+                }
+                catch (MalformedURLException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
+                } catch (IOException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
+                } finally {
+                    if (c != null) {
+                        try {
+                            c.disconnect();
+                        } catch (Exception ex) {
+                            Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                            sb.append(ex.getMessage());
+                            return sb.toString();
+                        }
+                    }
+
+                }
+                return sb.toString();
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                boolean isjason=isJSONValid(result);
+                if(isjason) {
+                    try {
+                            JSONObject jsObj = new JSONObject(result.toString());
+                            AdminImage=jsObj.getString("photo");
+                            Db.InsertAdminImg(Db, AdminId, AdminImage);
+                            exportDatabse(TableData.TableInfo.DATABASE_NAME, applicationcontext);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        System.out.println("JSon Exception occured");
+                    }
+                }else {
+                    Toast.makeText(MessagingActivity.this, result, Toast.LENGTH_LONG).show();
+                }
+
+            }
+        }.execute();
+
+    }
+    public boolean isJSONValid(String test) {
+        try {
+            new JSONObject(test);
+        } catch (JSONException ex) {
+            // edited, to include @Arthur's comment
+            // e.g. in case JSONArray is valid as well...
+            try {
+                new JSONArray(test);
+            } catch (JSONException ex1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     private void initControls() {
         messagesContainer = (ListView) findViewById(R.id.messagesContainer);
@@ -151,12 +305,13 @@ public class MessagingActivity extends Activity {
 //    finish();
     }
 
-//    public void displayMessage(Message message) {
-//        if (adapter == null)
-//            adapter.add(message);
-//        adapter.notifyDataSetChanged();
-//        scroll();
-//    }
+    public void displayMessage(Message message) {
+       if (adapter == null)
+                adapter.add(message);
+            adapter.notifyDataSetChanged();
+            scroll();
+
+    }
 
     private void scroll() {
         messagesContainer.setSelection(messagesContainer.getCount() - 1);
@@ -179,7 +334,7 @@ public class MessagingActivity extends Activity {
         msg1.setDate(DateFormat.getDateTimeInstance().format(new Date()));
         chatHistory.add(msg1);
 
-        adapter = new MessageAdaptor(getApplicationContext(), new ArrayList<MessageListModel>());
+        adapter = new MessageAdaptor(getApplicationContext(), new ArrayList<Message>());
         messagesContainer.setAdapter(adapter);
 
         for (int i = 0; i < chatHistory.size(); i++) {

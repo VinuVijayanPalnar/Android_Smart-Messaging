@@ -24,7 +24,7 @@ import java.util.TreeSet;
 /**
  * Created by Arun on 08-10-2015.
  */
-public class MessageAdaptor extends ArrayAdapter<MessageListModel> {
+public class MessageAdaptor extends ArrayAdapter<Message> {
 
     private static final int TYPE_ITEM = 0;
     private static final int TYPE_SEPARATOR = 1;
@@ -33,14 +33,14 @@ public class MessageAdaptor extends ArrayAdapter<MessageListModel> {
     private TreeSet<Integer> sectionHeader = new TreeSet<Integer>();
 
 
-    private ArrayList<MessageListModel> allMessages;
+    private ArrayList<Message> allMessages;
    private boolean mNotifyOnChange = true;
     private LayoutInflater mInflater;
 
 //    private final List<Message> chatMessages;
     private Context context;
 
-    public MessageAdaptor(Context context, ArrayList<MessageListModel> chatMessages) {
+    public MessageAdaptor(Context context, ArrayList<Message> chatMessages) {
         super(context,R.layout.messagelist_template);
         this.context = context;
         this.allMessages = chatMessages;
@@ -59,7 +59,7 @@ public class MessageAdaptor extends ArrayAdapter<MessageListModel> {
     }
 
     @Override
-    public MessageListModel getItem(int position) {
+    public Message getItem(int position) {
         if (allMessages != null) {
             return allMessages.get(position);
         } else {
@@ -72,7 +72,7 @@ public class MessageAdaptor extends ArrayAdapter<MessageListModel> {
         return position;
     }
     @Override
-    public int getPosition(MessageListModel item) {
+    public int getPosition(Message item) {
         return allMessages .indexOf(item);
     }
 
@@ -108,9 +108,9 @@ public class MessageAdaptor extends ArrayAdapter<MessageListModel> {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-//        holder.name.setText(allPersons.get(position).getName());
-//        holder.description.setText(allPersons.get(position).getDescription());
-//        holder.pos = position;
+        holder.txtInfo.setText(allMessages.get(position).getDate());
+        holder.txtMessage.setText(allMessages.get(position).getMessage());
+        holder.ImgView .setImageBitmap(allMessages.get(position).getAdminImage());
         return convertView;
     }
 

@@ -130,7 +130,7 @@ public class DatabaseOperations extends SQLiteOpenHelper {
     public  boolean IsDataAvailable(DatabaseOperations Dop){
         SQLiteDatabase sq=Dop.getReadableDatabase();
         String[] columns={TableInfo.SENDER_ID,TableInfo.SENDER_NAME,TableInfo.MESSAGES,TableInfo.CREATED_DATE};
-       Cursor cursor=sq.query(TableInfo.TABLE_USERDETAILS,columns,null,null,null,null,null);
+       Cursor cursor=sq.query(TableInfo.TABLE_USERDETAILS, columns, null, null, null, null, null);
         if(cursor.getCount()<=0){
             Log.e(" IS MESSAGES PRESENT:", "Messages not available-Returned false");
             Dop.close();
@@ -168,6 +168,17 @@ public class DatabaseOperations extends SQLiteOpenHelper {
       return Sender_Image;
     }
 
+    public void InsertAdminImg(DatabaseOperations Dop, int admin_Id,String img)
+    {
+        SQLiteDatabase sq=Dop.getWritableDatabase();
+        ContentValues initialValue= new ContentValues();
+        initialValue.put(TableInfo.ADMIN_ID,admin_Id);
+        initialValue.put(TableInfo.ADMIN_IMAGE, img);
+        long dbid= sq.insert(TableInfo.TABLE_ADMINDETAILS, null, initialValue);
+        Log.d("ADMIN IMAGE INSERTION:","Image Inserted");
+
+        Dop.close();
+    }
     public Date ConvertStringToDate(String _date)
     {
         DateFormat formatter = null;
