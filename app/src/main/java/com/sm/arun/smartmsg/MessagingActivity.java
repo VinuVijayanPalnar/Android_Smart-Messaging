@@ -91,12 +91,7 @@ public class MessagingActivity extends Activity {
         regId = prefs.getString("regId", "");
         // Intent Message sent from Broadcast Receiver
         String str = getIntent().getStringExtra("msg");
-        // When Message sent from Broadcase Receiver is not empty
-//        if (str != null) {
-        // Set the message
-//            msgET = (TextView) findViewById(R.id.message);
-//            msgET.setText("");
-//            msgET.setText(str);
+
 
 //         Get Email ID from Shared preferences
         Calendar c = Calendar.getInstance();
@@ -155,6 +150,15 @@ public class MessagingActivity extends Activity {
         adptor= new MsgAdaptor(applicationcontext,new ArrayList<Message>());
         messagesContainer.setAdapter(adptor);
         adptor.addAll(chatHistory);
+        // When Message sent from Broadcase Receiver is not empty
+        if (str != null) {
+        Message msg= new Message();
+
+//         Set the message
+//            msgET = (TextView) findViewById(R.id.message);
+//            msgET.setText("");
+//            msgET.setText(str);
+        }
         exportDatabse("MyDB",MessagingActivity.this);
         // Check if Google Play Service is installed in Device
         // Play services is needed to handle GCM stuffs
@@ -376,6 +380,21 @@ public class MessagingActivity extends Activity {
 
         }
         return true;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        checkPlayServices();
+        String str = getIntent().getStringExtra("msg");
+        if (!checkPlayServices()) {
+            Toast.makeText(
+                    getApplicationContext(),
+                    "This device doesn't support Play services, App will not work normally",
+                    Toast.LENGTH_LONG).show();
+        }
+        if (str != null) {
+        }
     }
 
     // When Application is resumed, check for Play services support to make sure

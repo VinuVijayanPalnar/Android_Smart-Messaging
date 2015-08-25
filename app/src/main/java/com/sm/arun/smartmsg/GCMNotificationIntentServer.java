@@ -43,7 +43,7 @@ public class GCMNotificationIntentServer  extends IntentService{
 //                sendNotification("Message Received from Google GCM Server:\n\n"
 //                        + extras.get(ApplicationConstants.MSG_KEY));
                 sendNotification("Message Received from Google GCM Server:\n\n"
-                        + intent.getStringExtra("title"));
+                        + intent.getStringExtra(msg));
 //                sendNotification("Message Received from Google GCM Server:\n\n"
 //                        + extras.toString());
 
@@ -66,7 +66,7 @@ public class GCMNotificationIntentServer  extends IntentService{
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         mNotifyBuilder = new NotificationCompat.Builder(this)
-                .setContentTitle("Alert")
+                .setContentTitle("Smart Message")
                 .setContentText("You've received new message.")
                 .setSmallIcon(R.mipmap.ic_launcher);
         // Set pending intent
