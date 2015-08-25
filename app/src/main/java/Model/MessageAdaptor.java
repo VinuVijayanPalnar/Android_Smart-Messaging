@@ -90,6 +90,7 @@ public class MessageAdaptor extends ArrayAdapter<Message> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         final ViewHolder holder;
+        Message msg=getItem(position);
         int type = getItemViewType(position);
         if (convertView == null) {
             holder = new ViewHolder();
@@ -110,7 +111,7 @@ public class MessageAdaptor extends ArrayAdapter<Message> {
         }
         holder.txtInfo.setText(allMessages.get(position).getDate());
         holder.txtMessage.setText(allMessages.get(position).getMessage());
-        holder.ImgView .setImageBitmap(allMessages.get(position).getAdminImage());
+//        holder.ImgView .setImageBitmap(allMessages.get(position).getAdminImage());
         return convertView;
     }
 
@@ -124,61 +125,6 @@ public class MessageAdaptor extends ArrayAdapter<Message> {
         mNotifyOnChange = notifyOnChange;
     }
 
-
-//    @Override
-//    public View getView(final int position, View convertView, ViewGroup parent) {
-//
-//
-//        ViewHolder holder = null;
-//        int rowType = getItemViewType(position);
-//        LayoutInflater vi = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//        if (convertView == null) {
-//            holder = new ViewHolder();
-//            switch (rowType) {
-//                case TYPE_ITEM:
-//                    convertView = mInflater.inflate(R.layout.messagelist_template, null);
-//                    holder.txtMessage = (TextView) convertView.findViewById(R.id.txtMessage);
-//                    break;
-//                case TYPE_SEPARATOR:
-//                    convertView = mInflater.inflate(R.layout.listitem_seperator, null);
-//                    holder.seperator = (TextView) convertView.findViewById(R.id.seperator);
-//                    break;
-//            }
-//            convertView.setTag(holder);
-//        } else {
-//            holder = (ViewHolder) convertView.getTag();
-//        }
-//        holder.seperator.setText(mData.get(position));
-//
-//        return convertView;
-//
-//
-//
-////        boolean myMsg = Message.getIsme() ;//Just a dummy check
-////        //to simulate whether it me or other sender
-//////        setAlignment(holder, myMsg);
-////        holder.txtMessage.setText(chatMessage.getMessage());
-////        holder.txtInfo.setText(chatMessage.getDate());
-////
-////        return convertView;
-//    }
-
-//    public void add(Message message) {
-//        chatMessages.add(message);
-//    }
-//
-//    public void add(List<Message> messages) {
-//        chatMessages.addAll(messages);
-//    }
-
-//    private ViewHolder createViewHolder(View v) {
-//        ViewHolder holder = new ViewHolder();
-//        holder.txtMessage = (TextView) v.findViewById(R.id.txtMessage);
-//        holder.content = (LinearLayout) v.findViewById(R.id.content);
-//        holder.contentWithBG = (LinearLayout) v.findViewById(R.id.contentWithBackground);
-//        holder.txtInfo = (TextView) v.findViewById(R.id.txtInfo);
-//        return holder;
-//    }
 
     private static class ViewHolder {
         public ImageView ImgView;

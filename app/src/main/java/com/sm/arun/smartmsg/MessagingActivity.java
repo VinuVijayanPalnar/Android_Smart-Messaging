@@ -58,6 +58,7 @@ import DataBaseSQlite.TableData;
 import Model.Message;
 import Model.MessageAdaptor;
 import Model.MessageListModel;
+import Model.MsgAdaptor;
 
 /**
  * Created by Arun on 07-29-2015.
@@ -72,6 +73,7 @@ public class MessagingActivity extends Activity {
     Context applicationcontext;
     DatabaseOperations Db;
     private MessageAdaptor adapter;
+    private MsgAdaptor adptor;
     private ArrayList<Message> chatHistory;
     private ArrayList<MessageListModel> Msgs;
     int AdminId;
@@ -127,27 +129,32 @@ public class MessagingActivity extends Activity {
         Cr.close();
         Db.close();
 // Fetch all admin Details in one go and save in DB
-        for (Message msg : chatHistory) {
-
-           AdminImage=Db.GetAdminPhoto(Db,Integer.toString(msg.getAdminId()));
-            if(AdminImage==null)
-            {
-                AdminName=msg.getAdminName();
-                AdminId=msg.getAdminId();
-                FetchAdminPhoto();
-                // Issue: The fetched image is not being inserted into the arraylist
-            }else{
-                Bitmap img=decodeBase64(AdminImage);
-                if(img!=null)
-                    msg.setAdminImage(img);
-            }
-        }
-        adapter = new MessageAdaptor(getApplicationContext(), new ArrayList<Message>());
-        messagesContainer.setAdapter(adapter);
-        for (int i = 0; i < chatHistory.size(); i++) {
-            Message msg = chatHistory.get(i);
-            displayMessage(msg);
-        }
+//        for (Message msg : chatHistory) {
+//
+//           AdminImage=Db.GetAdminPhoto(Db,Integer.toString(msg.getAdminId()));
+//            if(AdminImage==null)
+//            {
+//                AdminName=msg.getAdminName();
+//                AdminId=msg.getAdminId();
+//                FetchAdminPhoto();
+//                // Issue: The fetched image is not being inserted into the arraylist
+//            }else{
+//                Bitmap img=decodeBase64(AdminImage);
+//                if(img!=null)
+//                    msg.setAdminImage(img);
+//            }
+//        }
+//        adapter = new MessageAdaptor(applicationcontext, new ArrayList<Message>());
+        messagesContainer=(ListView)findViewById(R.id.messagesContainer);
+//        messagesContainer.setAdapter(adapter);
+//        adapter.addAll(chatHistory);
+//        for (int i = 0; i < chatHistory.size(); i++) {
+//            Message msg = chatHistory.get(i);
+//            displayMessage(msg);
+//        }
+        adptor= new MsgAdaptor(applicationcontext,new ArrayList<Message>());
+        messagesContainer.setAdapter(adptor);
+        adptor.addAll(chatHistory);
         exportDatabse("MyDB",MessagingActivity.this);
         // Check if Google Play Service is installed in Device
         // Play services is needed to handle GCM stuffs
