@@ -2,8 +2,10 @@ package com.sm.arun.smartmsg;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -12,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -171,6 +174,43 @@ public class MessagingActivity extends Activity {
 
 
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        applicationcontext .registerReceiver(mMessageReceiver, new IntentFilter("unique_name"));
+        checkPlayServices();
+        String str = getIntent().getStringExtra("msg");
+        if (!checkPlayServices()) {
+            Toast.makeText(
+                    getApplicationContext(),
+                    "This device doesn't support Play services, App will not work normally",
+                    Toast.LENGTH_LONG).show();
+        }
+        if (str != null) {
+
+        }
+    }
+
+    //Must unregister onPause()
+    @Override
+    protected void onPause() {
+        super.onPause();
+        applicationcontext.unregisterReceiver(mMessageReceiver);
+    }
+
+
+    //This is the handler that will manager to process the broadcast intent
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            // Extract data included in the Intent
+            String message = intent.getStringExtra("message");
+           System.out.println(message);
+            //do other stuff here
+        }
+    };
     public static Bitmap decodeBase64(String input)
     {
         try {
@@ -382,6 +422,7 @@ public class MessagingActivity extends Activity {
         return true;
     }
 
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -397,27 +438,7 @@ public class MessagingActivity extends Activity {
         }
     }
 
-    // When Application is resumed, check for Play services support to make sure
-    // app will be running normally
-    @Override
-    protected void onResume() {
-        super.onResume();
-        checkPlayServices();
-        String str = getIntent().getStringExtra("msg");
-        if (!checkPlayServices()) {
-            Toast.makeText(
-                    getApplicationContext(),
-                    "This device doesn't support Play services, App will not work normally",
-                    Toast.LENGTH_LONG).show();
-        }
-        if (str != null) {
-//             Set the message
-//           msgET.setText(msgET.getText().toString()+"/n"+str);
-//            msgET.setText(str);
 
-        }
-
-    }
     public static void exportDatabse(String databaseName,Context context) {
         try {
 System.out.println("Enter ");

@@ -23,13 +23,15 @@ public class GCMNotificationIntentServer  extends IntentService{
         super("GcmIntentService");
     }
 
+
     @Override
     protected void onHandleIntent(Intent intent) {
         Bundle extras = intent.getExtras();
         GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
 
         String messageType = gcm.getMessageType(intent);
-        String msg = extras.toString();
+//        String msg = extras.toString();
+        String msg=intent.getStringExtra("message");
          if (!extras.isEmpty()) {
             if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR
                     .equals(messageType)) {
@@ -43,13 +45,12 @@ public class GCMNotificationIntentServer  extends IntentService{
 //                sendNotification("Message Received from Google GCM Server:\n\n"
 //                        + extras.get(ApplicationConstants.MSG_KEY));
                 sendNotification("Message Received from Google GCM Server:\n\n"
-                        + intent.getStringExtra(msg));
+                        + msg);
+                updateMyActivity(this,msg);
+
 //                sendNotification("Message Received from Google GCM Server:\n\n"
 //                        + extras.toString());
-
-
-
-            }
+             }
         }
         GcmBroadcastReceiver.completeWakefulIntent(intent);
     }
@@ -57,6 +58,7 @@ public class GCMNotificationIntentServer  extends IntentService{
     private void sendNotification(String msg) {
         Intent resultIntent = new Intent(this, MessagingActivity.class);
         resultIntent.putExtra("msg", msg);
+        updateMyActivity(this,msg);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
                 resultIntent, PendingIntent.FLAG_ONE_SHOT);
 
@@ -90,5 +92,15 @@ public class GCMNotificationIntentServer  extends IntentService{
             notifyID = 0;
         }
        mNotificationManager.notify(notifyID++, mNotifyBuilder.build());
+    }
+    static void updateMyActivity(Context context, String message) {
+
+        Intent intent = new Intent("unique_name");
+
+        //put whatever data you want to send, if any
+        intent.putExtra("message", message);
+
+        //send broadcast
+        context.sendBroadcast(intent);
     }
 }

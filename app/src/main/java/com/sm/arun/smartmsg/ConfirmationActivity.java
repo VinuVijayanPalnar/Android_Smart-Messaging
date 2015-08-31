@@ -251,7 +251,10 @@ public class ConfirmationActivity  extends Activity{
                         Toast.makeText(ConfirmationActivity.this, "done", Toast.LENGTH_LONG).show();
                     } catch (JSONException e) {
                         e.printStackTrace();
-                        System.out.println("JSon Exception occured");
+                        Intent Intend = new Intent(ConfirmationActivity.this, MessagingActivity.class);
+                        startActivity(Intend);
+                        finish();
+                        System.out.println("JSon Exception occured"+e.getMessage());
                     }
                 }else {
                     Toast.makeText(ConfirmationActivity.this, result, Toast.LENGTH_LONG).show();
