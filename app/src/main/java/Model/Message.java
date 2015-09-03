@@ -8,17 +8,26 @@ import android.graphics.Bitmap;
 public class Message
 {
         private long id;
+        private int type;
         private String message;
         private int adminId;
         private String adminName;
         private Bitmap adminImage;
         private String dateTime;
-
+    public int getType()
+    {
+        return type;
+    }
+    public void setType(int Type)
+    {
+        this.type = Type;
+    }
     public String getAdminName()
     {
         return adminName;
     }
-    public void setAdminName(String adminname) {
+    public void setAdminName(String adminname)
+    {
         this.adminName = adminname;
     }
     public Bitmap getAdminImage()
@@ -55,4 +64,5 @@ public class Message
         public void setDate(String dateTime) {
             this.dateTime = dateTime;
         }
+
 }

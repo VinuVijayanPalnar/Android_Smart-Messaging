@@ -52,6 +52,7 @@ public class RegistrationActivity extends Activity  {
     RequestParams params = new RequestParams();
     GoogleCloudMessaging gcmObj;
     Context applicationContext;
+
     String regId = "";
     long UserDbId;
     boolean isSqlitepopulated;
@@ -129,11 +130,12 @@ public class RegistrationActivity extends Activity  {
             protected void onPostExecute(String msg) {
                 if (!TextUtils.isEmpty(regId)) {
                     // Store RegId created by GCM Server in SharedPref
-                    storeRegIdinSharedPref(applicationContext, regId, emailID);
+//                    storeRegIdinSharedPref(applicationContext, regId, emailID);
                     Toast.makeText(
                             applicationContext,
                             "Registered with GCM Server successfully.\n\n"
                                     + msg, Toast.LENGTH_SHORT).show();
+                    new ServiceTask().execute();
                 } else {
                     Toast.makeText(
                             applicationContext,
@@ -153,10 +155,8 @@ public class RegistrationActivity extends Activity  {
         editor.putString(REG_ID, regId);
         editor.putString(EMAIL_ID, emailID);
         editor.commit();
-        new ServiceTask().execute();
-//        storeRegIdinServer();
 
-    }
+  }
 //    ===== Check if Google Playservices is installed in Device or not
     private boolean checkPlayServices() {
         int resultCode = GooglePlayServicesUtil
@@ -414,16 +414,20 @@ public class RegistrationActivity extends Activity  {
                         break;
                     case "1002"://===MAKE SERVER CALL TO FETCH USER DETAILS MESSAGES ADMIN DETAILS ANS SO=====
                     if(!isSqlitepopulated)
+//                        storeRegIdinSharedPref(applicationContext, regId, Email.getText().toString());
                         GetUser(userName.getText().toString());
-
+                        GetAllAdminImages();
                         Toast.makeText(RegistrationActivity.this, "Registered User", Toast.LENGTH_LONG).show();
                         Intent myIntend = new Intent(applicationContext, ConfirmationActivity.class);
                         myIntend.putExtra("ShouldRetrieveOldMsg", true);
+                        myIntend.putExtra("regId", regId);
                         myIntend.putExtra("EMAIL", Email.getText().toString());
+                        myIntend.putExtra("USR_Nme", userName.getText().toString());
                         startActivity(myIntend);
                         finish();
                         break;
                     case "OK":
+//                        storeRegIdinSharedPref(applicationContext, regId, Email.getText().toString());
                         Db.InsertUserDetails(Db,userName.getText().toString(), Email.getText().toString(),null,null,null,null);
                         Toast.makeText(applicationContext, "Db id:" + "Registration Successful", Toast.LENGTH_LONG).show();
 
@@ -433,6 +437,7 @@ public class RegistrationActivity extends Activity  {
                         editor.commit();
                         Intent Intend = new Intent(RegistrationActivity.this, ConfirmationActivity.class);
                         Intend.putExtra("ShouldRetrieveOldMsg", false);
+                        Intend.putExtra("regId", regId);
                         Intend.putExtra("USR_Nme", userName.getText().toString());
                         Intend.putExtra("EMAIL", Email.getText().toString());
                         startActivity(Intend);
@@ -457,6 +462,105 @@ public class RegistrationActivity extends Activity  {
 
     }
 }
+    private void GetAllAdminImages() {
+        new AsyncTask<String, Void, String>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+            @Override
+            protected String doInBackground(String... params) {
+
+                BufferedReader br = null;
+                StringBuilder sb = new StringBuilder("");
+                HttpURLConnection c = null;
+                try {
+                    URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/getAllAdmins");
+                    c = (HttpURLConnection) u.openConnection();
+                    c.setRequestMethod("GET");
+                    c.setRequestProperty("Content-length", "0");
+                    c.setRequestProperty("Content-Type", "application/json");
+                    c.setUseCaches(false);
+                    c.setAllowUserInteraction(false);
+                    c.connect();
+                    int status = c.getResponseCode();
+                    switch (status) {
+                        case 200:
+                        case 201:
+                            br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+                            sb = new StringBuilder();
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                sb.append(line + "\n");
+                            }
+                            br.close();
+                            return sb.toString();
+                    }
+                }catch (ConnectException e) {
+                    Log.e("Exception Caught", e.getMessage());
+//            Toast.makeText(RegistrationActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+                    sb.append(e.getMessage());
+                    return sb.toString();
+
+                }
+                catch (MalformedURLException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
+                } catch (IOException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
+                } finally {
+                    if (c != null) {
+                        try {
+                            c.disconnect();
+                        } catch (Exception ex) {
+                            Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                            sb.append(ex.getMessage());
+                            return sb.toString();
+                        }
+                    }
+
+                }
+                return sb.toString();
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                boolean isjason=isJSONValid(result);
+                if(isjason) {
+                    try {
+                        JSONObject jsObj = new JSONObject(result.toString());
+                        if(!Db.IsUserPresent(Db,jsObj.getString("username"))){
+
+                            Db.InsertUserDetails(Db,jsObj.getString("username"), jsObj.getString("email"),
+                                    jsObj.getString("first_name"), jsObj.getString("last_name"), jsObj.getString("mobile_number"), jsObj.getString("photo"));
+                        }
+                        else{
+                            SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
+                            Long ph_No=Long.parseLong(jsObj.getString("mobile_number"));
+                            Db.UpdateUserDetails(Db, jsObj.getString("username"), jsObj.getString("first_name"), jsObj.getString("last_name"), ph_No, jsObj.getString("photo"));
+                        }
+                        SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE).edit();
+                        editor.putString("UserName", userName.getText().toString());
+                        editor.putString("Email", Email.getText().toString());
+                        editor.putLong("UserId", UserDbId);
+                        editor.commit();
+                        exportDatabse(TableData.TableInfo.DATABASE_NAME, applicationContext);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        System.out.println("JSon Exception occured");
+                    }
+                }else {
+                    Toast.makeText(RegistrationActivity.this, result, Toast.LENGTH_LONG).show();
+                }
+
+            }
+        }.execute();
+
+    }
  public boolean isJSONValid(String test) {
         try {
             new JSONObject(test);

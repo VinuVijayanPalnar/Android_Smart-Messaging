@@ -45,13 +45,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -95,32 +99,45 @@ public class MessagingActivity extends Activity {
         // Intent Message sent from Broadcast Receiver
         String str = getIntent().getStringExtra("msg");
 
-
-//         Get Email ID from Shared preferences
-        Calendar c = Calendar.getInstance();
-
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-
-// and get that as a Date
-        Date today = c.getTime();
-
 //        initControls();
 
         Msgs = new ArrayList<MessageListModel>();
         chatHistory= new ArrayList<Message>();
+        String date=null;
         Cursor Cr=Db.GetAllMessages(Db);
         if(Cr!=null && Cr.moveToFirst())
         {
             do{
-                Message SingleMsg= new Message();
-                SingleMsg.setAdminId(Cr.getInt(0));
-                SingleMsg.setAdminName(Cr.getString(1));
-                SingleMsg.setMessage(Cr.getString(2));
-                SingleMsg.setDate(Cr.getString(3));
-                chatHistory.add(SingleMsg);
+                if(date!=null) {
+                    if(compareDate(date,Cr.getString(3))!=0&&compareDate(date,Cr.getString(3))!=1) {
+                        date=Cr.getString(3);
+                        Message HdrMsg = new Message();
+                        HdrMsg.setMessage(date);
+                        HdrMsg.setType(1);
+                        chatHistory.add(HdrMsg);
+                    }
+                        Message SingleMsg = new Message();
+                        SingleMsg.setAdminId(Cr.getInt(0));
+                        SingleMsg.setAdminName(Cr.getString(1));
+                        SingleMsg.setMessage(Cr.getString(2));
+                        SingleMsg.setDate(Cr.getString(3));
+                        chatHistory.add(SingleMsg);
+
+                }else
+                {
+                    date=Cr.getString(3);
+                    Message HdrMsg = new Message();
+                    HdrMsg.setMessage(date);
+                    HdrMsg.setType(1);
+                    chatHistory.add(HdrMsg);
+                    Message SingleMsg = new Message();
+                    SingleMsg.setType(2);
+                    SingleMsg.setAdminId(Cr.getInt(0));
+                    SingleMsg.setAdminName(Cr.getString(1));
+                    SingleMsg.setMessage(Cr.getString(2));
+                    SingleMsg.setDate(Cr.getString(3));
+                    chatHistory.add(SingleMsg);
+                }
 
             }while (Cr.moveToNext());
         }
@@ -150,7 +167,9 @@ public class MessagingActivity extends Activity {
 //            Message msg = chatHistory.get(i);
 //            displayMessage(msg);
 //        }
+//        Collections.sort(chatHistory,Collections.reverseOrder());
         adptor= new MsgAdaptor(applicationcontext,new ArrayList<Message>());
+
         messagesContainer.setAdapter(adptor);
         adptor.addAll(chatHistory);
         // When Message sent from Broadcase Receiver is not empty
@@ -173,6 +192,34 @@ public class MessagingActivity extends Activity {
         }
 
 
+    }
+    public int compareDate( String dte1,String dte2) {
+        try {
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd",Locale.ENGLISH);
+//            "yyyy-MM-dd'T'HH:mm:ss'Z'"
+            String date = "yyyy-mm-dd hh:mm:ss";
+            StringTokenizer tk1 = new StringTokenizer(dte1);
+            Date date1 =sdf.parse(tk1.nextToken());
+            StringTokenizer tk2 = new StringTokenizer(dte1);
+            Date date2 =sdf.parse(tk2.nextToken());
+
+//            Date date1 =formatter.parse(formatter.format(sdf.parse(dte1)));
+//            Date date2 = formatter.parse(formatter.format(sdf.parse(dte2)));
+
+            if(date1.compareTo(date2)>0){
+                Log.v("app", "Date1 is after Date2");
+                return 3;
+            }else if(date1.compareTo(date2)<0){
+                Log.v("app","Date1 is before Date2");
+                return 2;
+            }else if(date1.compareTo(date2)==0){
+                Log.v("app","Date1 is equal to Date2");
+                return 1;
+            }
+        } catch(Exception e) {Log.v("DateCompare:","Exception "+e.getMessage()+" caught while comparing Date1 and Date2"); }
+        return 0;
     }
 
     @Override

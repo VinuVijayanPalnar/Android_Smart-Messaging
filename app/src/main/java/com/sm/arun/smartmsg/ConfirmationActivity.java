@@ -47,10 +47,14 @@ public class ConfirmationActivity  extends Activity{
     Context applicationContext;
     private static final String MY_PREFS_NAME = "MyPrefs";
     String UserName,E_mail;
+    String regId = "";
+    public static final String REG_ID = "regId";
+    public static final String EMAIL_ID = "eMailId";
     EditText ConfirmationCode;
     boolean ShouldRetrieveOldMsg;
      Button ConfirmBtn;
     DBAdapter db;
+
     DatabaseOperations Db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,14 +67,15 @@ public class ConfirmationActivity  extends Activity{
         ConfirmBtn=(Button)findViewById(R.id.butnConfirm);
         UserName=getIntent().getExtras().getString("USR_Nme");
         E_mail=getIntent().getExtras().getString("EMAIL");
+        regId=getIntent().getExtras().getString("regId");
         Intent i=getIntent();
         ShouldRetrieveOldMsg = i.getBooleanExtra("ShouldRetrieveOldMsg", false);
      }
     public void OnclickConfirm(View view) {
-        LoginCheck(UserName, E_mail);
+        LoginCheck();
     }
 
-    private void LoginCheck(String UserName, String E_mail) {
+    private void LoginCheck() {
         new AsyncTask<String, Void, String>() {
             @Override
             protected void onPreExecute() {
@@ -82,7 +87,7 @@ public class ConfirmationActivity  extends Activity{
                 BufferedReader br = null;
                 StringBuilder sb = new StringBuilder("");
               SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
-              String UserName=Preferences.getString("UserName", "");
+//              String UserName=Preferences.getString("UserName", "");
               String email=Preferences.getString("Email","");
                 HttpURLConnection c = null;
                 try {
@@ -136,11 +141,22 @@ public class ConfirmationActivity  extends Activity{
                     String Status = jsObj.getString("login_status");
                     switch (Status) {
                         case "login_failed":
-                            Toast.makeText(ConfirmationActivity.this, "Incorrect Code", Toast.LENGTH_LONG).show();
+                            Toast.makeText(ConfirmationActivity.this, "Incorrect Code: Login Failed", Toast.LENGTH_LONG).show();
                             break;
                         case "login_success":
-                            if(ShouldRetrieveOldMsg)
-                                GetoldMessages();
+
+                            if(ShouldRetrieveOldMsg) {
+                                UpdateToken();
+
+                            }
+                            else
+                            {
+                                Toast.makeText(ConfirmationActivity.this, "Login Success:New User", Toast.LENGTH_LONG).show();
+                                Intent Intend = new Intent(ConfirmationActivity.this, MessagingActivity.class);
+                                startActivity(Intend);
+                                finish();
+                            }
+
 //                                GetAdminDetails();
                             break;
                     }
@@ -154,6 +170,16 @@ public class ConfirmationActivity  extends Activity{
 
             }
         }.execute();
+
+    }
+    private void storeRegIdinSharedPref(Context context, String regId,
+                                        String emailID) {
+        SharedPreferences prefs = getSharedPreferences("UserDetails",
+                Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(REG_ID, regId);
+        editor.putString(EMAIL_ID, emailID);
+        editor.commit();
 
     }
 
@@ -170,7 +196,7 @@ public class ConfirmationActivity  extends Activity{
                 StringBuilder sb = new StringBuilder("");
                 HttpURLConnection c = null;
                 SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
-                String UserName=Preferences.getString("UserName", "");
+//                String UserName=Preferences.getString("UserName", "");
                 try {
 //                    http://192.168.1.130/smartchat/public/getOldMessages?username=bineesh
                     URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/getOldMessages?username="+UserName);
@@ -264,6 +290,103 @@ public class ConfirmationActivity  extends Activity{
         }.execute();
 
     }
+    private void UpdateToken() {
+        new AsyncTask<String, Void, String>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+            @Override
+            protected String doInBackground(String... params) {
+
+                BufferedReader br = null;
+                StringBuilder sb = new StringBuilder("");
+                HttpURLConnection c = null;
+                SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
+//                String UserName=Preferences.getString("UserName", "");
+                try {
+//                    http://192.168.1.130/smartchat/public/getOldMessages?username=bineesh
+                    URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/updateDeviceID?username="+UserName+"&deviceID="+regId);
+                    c = (HttpURLConnection) u.openConnection();
+                    c.setRequestMethod("GET");
+                    c.setRequestProperty("Content-length", "0");
+                    c.setRequestProperty("Content-Type", "application/json");
+                    c.setUseCaches(false);
+                    c.setAllowUserInteraction(false);
+                    c.connect();
+                    int status = c.getResponseCode();
+                    switch (status) {
+                        case 200:
+                        case 201:
+                            br = new BufferedReader(new InputStreamReader(c.getInputStream()));
+                            sb = new StringBuilder();
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                sb.append(line + "\n");
+                            }
+                            br.close();
+                            return sb.toString();
+                    }
+                }catch (ConnectException e) {
+                    Log.e("Exception Caught", e.getMessage());
+//            Toast.makeText(RegistrationActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+                    sb.append(e.getMessage());
+                    return sb.toString();
+
+                }
+                catch (MalformedURLException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
+                } catch (IOException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                    sb.append(ex.getMessage());
+                    return sb.toString();
+                } finally {
+                    if (c != null) {
+                        try {
+                            c.disconnect();
+                        } catch (Exception ex) {
+                            Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
+                            sb.append(ex.getMessage());
+                            return sb.toString();
+                        }
+                    }
+
+                }
+                return sb.toString();
+            }
+
+            @Override
+            protected void onPostExecute(String result) {
+                boolean isjason=isJSONValid(result);
+                if(isjason) {
+                    try {
+                        JSONObject jsObj = new JSONObject(result.toString());
+                        String response = jsObj.getString("response");
+                        switch (response) {
+                            case "Updated successfully":
+                                storeRegIdinSharedPref(applicationContext, regId, E_mail);
+                                GetoldMessages();
+                                Toast.makeText(ConfirmationActivity.this, "Updated Successfully", Toast.LENGTH_LONG).show();
+                                break;
+                            case "Failed to Update":
+                                     Toast.makeText(ConfirmationActivity.this, "Failed To Update Device Token", Toast.LENGTH_LONG).show();
+
+                               break;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        System.out.println("JSon Exception occured");
+                    }
+                }else {
+                    Toast.makeText(ConfirmationActivity.this, result, Toast.LENGTH_LONG).show();
+                }
+
+            }
+        }.execute();
+
+    }
     private void GetAdminDetails() {
         new AsyncTask<String, Void, String>() {
             @Override
@@ -279,7 +402,7 @@ public class ConfirmationActivity  extends Activity{
                 SharedPreferences Preferences= getSharedPreferences(MY_PREFS_NAME, Context.MODE_PRIVATE);
                 String UserName=Preferences.getString("UserName", "");
                 try {
-                    URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/getOldMessages?username="+UserName);
+                    URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/getAllAdmins");
                     c = (HttpURLConnection) u.openConnection();
                     c.setRequestMethod("GET");
                     c.setRequestProperty("Content-length", "0");
@@ -340,11 +463,9 @@ public class ConfirmationActivity  extends Activity{
                         {
                             for(int i=0;i<ar.length();i++) {
                                 JSONObject jsObj = new JSONObject(ar.getString(i));
-                                String message=jsObj.getString("msg_text");
-                                String date=jsObj.getString("created_at");
-                                String adminName=jsObj.getString("sender");
                                 Integer AdminId=Integer.parseInt(jsObj.getString("id"));
-                                Db.InsertMessageDetails(Db, message, date, adminName, AdminId);
+                                String AdminImage=jsObj.getString("photo");
+                                Db.InsertAdminImg(Db, AdminId, AdminImage);
                             }
 
                         }
