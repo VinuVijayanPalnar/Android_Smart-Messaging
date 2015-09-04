@@ -146,6 +146,8 @@ public class ConfirmationActivity  extends Activity{
                         case "login_success":
 
                             if(ShouldRetrieveOldMsg) {
+//                               storeRegIdinSharedPref(applicationContext, regId, E_mail);
+//                                GetoldMessages();
                                 UpdateToken();
 
                             }

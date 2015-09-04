@@ -11,12 +11,16 @@ import android.support.v4.app.NotificationCompat;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
+import java.lang.reflect.Array;
+import java.util.HashMap;
+
 /**
  * Created by Arun on 07-29-2015.
  */
 public class GCMNotificationIntentServer  extends IntentService{
     // Sets an ID for the notification, so it can be updated
     public static int notifyID = 0;
+    HashMap<String, String> hashMap;
     NotificationCompat.Builder builder;
 
     public GCMNotificationIntentServer() {
@@ -31,7 +35,22 @@ public class GCMNotificationIntentServer  extends IntentService{
 
         String messageType = gcm.getMessageType(intent);
 //        String msg = extras.toString();
-        String msg=intent.getStringExtra("message");
+        String message=intent.getStringExtra("message");
+        String timeStamp = intent.getStringExtra("timestamp");
+        String AdminName = intent.getStringExtra("admin-username");
+        String AdminId = intent.getStringExtra("admin-id");
+         hashMap = new HashMap<String, String>();
+        hashMap.put("message", message);
+        hashMap.put("timeStamp", timeStamp);
+        hashMap.put("AdminName", AdminName);
+        hashMap.put("AdminId", AdminId);
+//       msg = new String[]{
+//               message,
+//               timeStamp,
+//               AdminName,
+//               AdminId,
+//
+//       };
          if (!extras.isEmpty()) {
             if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR
                     .equals(messageType)) {
@@ -44,9 +63,11 @@ public class GCMNotificationIntentServer  extends IntentService{
                     .equals(messageType)) {
 //                sendNotification("Message Received from Google GCM Server:\n\n"
 //                        + extras.get(ApplicationConstants.MSG_KEY));
+//                sendNotification("Message Received from Google GCM Server:\n\n"
+//                        + msg);
                 sendNotification("Message Received from Google GCM Server:\n\n"
-                        + msg);
-                updateMyActivity(this,msg);
+                        + hashMap);
+//                updateMyActivity(this,hashMap);
 
 //                sendNotification("Message Received from Google GCM Server:\n\n"
 //                        + extras.toString());
@@ -55,10 +76,10 @@ public class GCMNotificationIntentServer  extends IntentService{
         GcmBroadcastReceiver.completeWakefulIntent(intent);
     }
 
-    private void sendNotification(String msg) {
+    private void sendNotification(String mesagesg) {
         Intent resultIntent = new Intent(this, MessagingActivity.class);
-        resultIntent.putExtra("msg", msg);
-        updateMyActivity(this,msg);
+        resultIntent.putExtra("msg", hashMap);
+        updateMyActivity(this,hashMap);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
                 resultIntent, PendingIntent.FLAG_ONE_SHOT);
 
@@ -93,12 +114,12 @@ public class GCMNotificationIntentServer  extends IntentService{
         }
        mNotificationManager.notify(notifyID++, mNotifyBuilder.build());
     }
-    static void updateMyActivity(Context context, String message) {
+    static void updateMyActivity(Context context, HashMap message) {
 
         Intent intent = new Intent("unique_name");
 
         //put whatever data you want to send, if any
-        intent.putExtra("message", message);
+        intent.putExtra("msg", message);
 
         //send broadcast
         context.sendBroadcast(intent);

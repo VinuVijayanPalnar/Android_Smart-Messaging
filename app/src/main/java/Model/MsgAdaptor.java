@@ -23,30 +23,30 @@ import java.util.Locale;
  * Created by Arun on 08-25-2015.
  */
 public class MsgAdaptor extends ArrayAdapter<Message> {
-String date=null;
+    String date=null;
     int Datatype;
     String SesctionHdr=null;
     ViewHolder viewHolder = null;
-            // View lookup cache
-        private static class ViewHolder {
-            ImageView ImgView;
-            TextView txtMessage;
-            TextView seperator;
-            TextView txtInfo;
-            LinearLayout content;
-            LinearLayout contentWithBG;
-        }
+    // View lookup cache
+    private static class ViewHolder {
+        ImageView ImgView;
+        TextView txtMessage;
+        TextView seperator;
+        TextView txtInfo;
+        LinearLayout content;
+        LinearLayout contentWithBG;
+    }
 
-        public MsgAdaptor(Context context, ArrayList<Message> msg) {
-            super(context, R.layout.messagelist_template, msg);
-          }
+    public MsgAdaptor(Context context, ArrayList<Message> msg) {
+        super(context, R.layout.messagelist_template, msg);
+    }
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            // Get the data item for this position
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        // Get the data item for this position
 
-            Message msg=getItem(position);
-            Datatype=msg.getType();
+        Message msg=getItem(position);
+        Datatype=msg.getType();
 //            if(date!=null)
 //            {
 //                int CopmpateDateResult=compareDate(date,msg.getDate());
@@ -62,8 +62,8 @@ String date=null;
 //
 //            }else
 //            date=msg.getDate();
-            // Check if an existing view is being reused, otherwise inflate the view
-            // view lookup cache stored in tag
+        // Check if an existing view is being reused, otherwise inflate the view
+        // view lookup cache stored in tag
 //            if(SesctionHdr==null || (compareDate(date,SesctionHdr)!=0)) {
 //                SesctionHdr=date;
 //                 Datatype = "SectionHeader";
@@ -90,42 +90,42 @@ String date=null;
 
 
 //           SesctionHdr=date;
-                if (convertView == null) {
-                    LayoutInflater inflater = LayoutInflater.from(getContext());
-                    viewHolder = new ViewHolder();
-                    switch(Datatype)
-                    {
-                        case 1:
-                            convertView = inflater.inflate(R.layout.listitem_seperator, parent, false);
-                            viewHolder.seperator = (TextView) convertView.findViewById(R.id.seperator);
-                            convertView.setTag(viewHolder);
-                        case 2:
-                            convertView = inflater.inflate(R.layout.messagelist_template, parent, false);
-                            viewHolder.txtInfo = (TextView) convertView.findViewById(R.id.txtInfo);
-                            viewHolder.txtMessage = (TextView) convertView.findViewById(R.id.txtMessage);
-                            convertView.setTag(viewHolder);
-
-                    }
-
-                } else {
-                    viewHolder = (ViewHolder) convertView.getTag();
-                }
-                // Populate the data into the template view using the data object
-                viewHolder.txtInfo.setText(msg.getAdminName());
-                viewHolder.txtMessage.setText(msg.getMessage());
-
-            if(viewHolder.seperator!=null)
-                viewHolder.seperator.setText(msg.getMessage());
-            else
+        if (convertView == null) {
+            LayoutInflater inflater = LayoutInflater.from(getContext());
+            viewHolder = new ViewHolder();
+            switch(Datatype)
             {
-               viewHolder.txtInfo.setText(msg.getAdminName());
-                viewHolder.txtMessage.setText(msg.getMessage());
+                case 1:
+                    convertView = inflater.inflate(R.layout.listitem_seperator, parent, false);
+                    viewHolder.seperator = (TextView) convertView.findViewById(R.id.seperator);
+                    convertView.setTag(viewHolder);
+                case 2:
+                    convertView = inflater.inflate(R.layout.messagelist_template, parent, false);
+                    viewHolder.txtInfo = (TextView) convertView.findViewById(R.id.txtInfo);
+                    viewHolder.txtMessage = (TextView) convertView.findViewById(R.id.txtMessage);
+                    convertView.setTag(viewHolder);
+
             }
-                // Return the completed view to render on screen
-                return convertView;
 
-
+        } else {
+            viewHolder = (ViewHolder) convertView.getTag();
         }
+        // Populate the data into the template view using the data object
+//        viewHolder.txtInfo.setText(msg.getAdminName());
+//        viewHolder.txtMessage.setText(msg.getMessage());
+
+        if(viewHolder.seperator!=null&&Datatype==1)
+            viewHolder.seperator.setText(msg.getMessage());
+        else
+        {
+            viewHolder.txtInfo.setText(msg.getAdminName());
+            viewHolder.txtMessage.setText(msg.getMessage());
+        }
+        // Return the completed view to render on screen
+        return convertView;
+
+
+    }
     public int compareDate( String dte1,String dte2) {
         try {
 //            "yyyy-MM-dd'T'HH:mm:ss'Z'"
@@ -151,4 +151,3 @@ String date=null;
         return 0;
     }
 }
-

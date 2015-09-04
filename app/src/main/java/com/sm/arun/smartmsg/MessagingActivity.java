@@ -45,12 +45,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -118,6 +120,7 @@ public class MessagingActivity extends Activity {
                     }
                         Message SingleMsg = new Message();
                         SingleMsg.setAdminId(Cr.getInt(0));
+                        SingleMsg.setType(2);
                         SingleMsg.setAdminName(Cr.getString(1));
                         SingleMsg.setMessage(Cr.getString(2));
                         SingleMsg.setDate(Cr.getString(3));
@@ -194,31 +197,32 @@ public class MessagingActivity extends Activity {
 
     }
     public int compareDate( String dte1,String dte2) {
-        try {
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd",Locale.ENGLISH);
-//            "yyyy-MM-dd'T'HH:mm:ss'Z'"
-            String date = "yyyy-mm-dd hh:mm:ss";
-            StringTokenizer tk1 = new StringTokenizer(dte1);
-            Date date1 =sdf.parse(tk1.nextToken());
-            StringTokenizer tk2 = new StringTokenizer(dte1);
-            Date date2 =sdf.parse(tk2.nextToken());
+             try {
+                DateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date d1 = f.parse(dte1);
+                Date d2 = f.parse(dte2);
+                DateFormat date = new SimpleDateFormat("MM/dd/yyyy");
+                DateFormat time = new SimpleDateFormat("hh:mm:ss a");
+                dte1=date.format(d1);
+                dte2=date.format(d2);
+                Date date1 =date.parse(dte1);
+                Date date2 =date.parse(dte2);
+                if(date1.compareTo(date2)>0){
+                    Log.v("app", "Date1 is after Date2");
+                    return 3;
+                }else if(date1.compareTo(date2)<0){
+                    Log.v("app","Date1 is before Date2");
+                    return 2;
+                }else if(date1.compareTo(date2)==0){
+                    Log.v("app","Date1 is equal to Date2");
+                    return 1;
+                }
 
-//            Date date1 =formatter.parse(formatter.format(sdf.parse(dte1)));
-//            Date date2 = formatter.parse(formatter.format(sdf.parse(dte2)));
-
-            if(date1.compareTo(date2)>0){
-                Log.v("app", "Date1 is after Date2");
-                return 3;
-            }else if(date1.compareTo(date2)<0){
-                Log.v("app","Date1 is before Date2");
-                return 2;
-            }else if(date1.compareTo(date2)==0){
-                Log.v("app","Date1 is equal to Date2");
-                return 1;
+            } catch (ParseException e) {
+                Log.v("DateCompare:","Exception "+e.getMessage()+" caught while comparing Date1 and Date2");
+                e.printStackTrace();
             }
-        } catch(Exception e) {Log.v("DateCompare:","Exception "+e.getMessage()+" caught while comparing Date1 and Date2"); }
         return 0;
     }
 
@@ -253,8 +257,34 @@ public class MessagingActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
 
             // Extract data included in the Intent
-            String message = intent.getStringExtra("message");
-           System.out.println(message);
+            String str = getIntent().getStringExtra("msg");
+            Intent Intnt = getIntent();
+            HashMap<String, String> hashMap = (HashMap<String, String>)intent.getSerializableExtra("msg");
+            String message=hashMap.get("message");
+            String timeStamp = hashMap.get("timeStamp");
+            String AdminName = hashMap.get("AdminName");
+            String AdminId = hashMap.get("AdminId");
+
+            Db.InsertMessageDetails(Db, message, timeStamp, AdminName, Integer.parseInt(AdminId));
+
+             Message SingleMsg = new Message();
+            SingleMsg.setType(2);
+            SingleMsg.setAdminId(Integer.parseInt(AdminId));
+            SingleMsg.setAdminName(AdminName);
+            SingleMsg.setMessage(message);
+            SingleMsg.setDate(timeStamp);
+
+            if(compareDate(chatHistory.get(0).getDate(),timeStamp)!=1&&compareDate(chatHistory.get(0).getDate(),timeStamp)!=0)
+            {
+                chatHistory.add(0, SingleMsg);
+                Message HdrMsg = new Message();
+                HdrMsg.setMessage(timeStamp);
+                HdrMsg.setType(1);
+                chatHistory.add(HdrMsg);
+            }else{
+                chatHistory.add(1,SingleMsg);
+            }
+//            displayMessage(SingleMsg);
             //do other stuff here
         }
     };
