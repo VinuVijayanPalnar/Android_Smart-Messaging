@@ -318,13 +318,15 @@ public class MessagingActivity extends Activity {
             String AdminId = hashMap.get("AdminId");
 
             Db.InsertMessageDetails(Db, message, timeStamp, AdminName, Integer.parseInt(AdminId));
-
+            String AdminPhoto =Db.GetAdminPhoto(Db, AdminId);
              Message SingleMsg = new Message();
             SingleMsg.setType(2);
             SingleMsg.setAdminId(Integer.parseInt(AdminId));
             SingleMsg.setAdminName(AdminName);
             SingleMsg.setMessage(message);
             SingleMsg.setDate(timeStamp);
+            SingleMsg.setAdminImage(decodeBase64(AdminPhoto));
+
 //&&(compareDate(chatHistory.get(0).getMessage(),timeStamp)!=0)
             if((compareDate(chatHistory.get(0).getMessage(),timeStamp)!=1))
             {
