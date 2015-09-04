@@ -47,51 +47,10 @@ public class MsgAdaptor extends ArrayAdapter<Message> {
 
         Message msg=getItem(position);
         Datatype=msg.getType();
-//            if(date!=null)
-//            {
-//                int CopmpateDateResult=compareDate(date,msg.getDate());
-//                switch (CopmpateDateResult)
-//                {
-//                    case 1:break;
-//                    case 2:break;
-//                    case 3:date=msg.getDate();
-//                            break;
-//                    case 0:
-//                        System.out.println("Exception");
-//                }
-//
-//            }else
-//            date=msg.getDate();
-        // Check if an existing view is being reused, otherwise inflate the view
-        // view lookup cache stored in tag
-//            if(SesctionHdr==null || (compareDate(date,SesctionHdr)!=0)) {
-//                SesctionHdr=date;
-//                 Datatype = "SectionHeader";
-//            }
-//           else
-//                 Datatype="Body";
 
-//
-//                if (convertView == null) {
-//
-//
-//                    viewHolder = new ViewHolder();
-//                    LayoutInflater inflater = LayoutInflater.from(getContext());
-//                    convertView = inflater.inflate(R.layout.listitem_seperator, parent, false);
-//                    viewHolder.seperator = (TextView) convertView.findViewById(R.id.seperator);
-//                    convertView.setTag(viewHolder);
-//                } else {
-//                    viewHolder = (ViewHolder) convertView.getTag();
-//                }
-//                // Populate the data into the template view using the data object
-//                viewHolder.seperator.setText(SesctionHdr);
-//                // Return the completed view to render on screen
-//                return convertView;
-
-
-//           SesctionHdr=date;
+        LayoutInflater inflater = LayoutInflater.from(getContext());
         if (convertView == null) {
-            LayoutInflater inflater = LayoutInflater.from(getContext());
+
             viewHolder = new ViewHolder();
             switch(Datatype)
             {
@@ -99,12 +58,14 @@ public class MsgAdaptor extends ArrayAdapter<Message> {
                     convertView = inflater.inflate(R.layout.listitem_seperator, parent, false);
                     viewHolder.seperator = (TextView) convertView.findViewById(R.id.seperator);
                     convertView.setTag(viewHolder);
+                    break;
                 case 2:
                     convertView = inflater.inflate(R.layout.messagelist_template, parent, false);
                     viewHolder.txtInfo = (TextView) convertView.findViewById(R.id.txtInfo);
                     viewHolder.txtMessage = (TextView) convertView.findViewById(R.id.txtMessage);
+                    viewHolder.ImgView=(ImageView)convertView.findViewById(R.id.adminimage);
                     convertView.setTag(viewHolder);
-
+                    break;
             }
 
         } else {
@@ -113,19 +74,43 @@ public class MsgAdaptor extends ArrayAdapter<Message> {
         // Populate the data into the template view using the data object
 //        viewHolder.txtInfo.setText(msg.getAdminName());
 //        viewHolder.txtMessage.setText(msg.getMessage());
-
-        if(viewHolder.seperator!=null&&Datatype==1)
-            viewHolder.seperator.setText(msg.getMessage());
-        else
+        if(Datatype==1) {
+            if (viewHolder.seperator != null )
+                viewHolder.seperator.setText(msg.getMessage());
+            else
+            {
+                convertView = inflater.inflate(R.layout.listitem_seperator, parent, false);
+                viewHolder.seperator = (TextView) convertView.findViewById(R.id.seperator);
+                convertView.setTag(viewHolder);
+                viewHolder.seperator.setText(msg.getMessage());
+            }
+        }else
         {
-            viewHolder.txtInfo.setText(msg.getAdminName());
-            viewHolder.txtMessage.setText(msg.getMessage());
+            if((viewHolder.txtInfo != null )&&(viewHolder.txtMessage != null ))
+            {
+                viewHolder.txtInfo.setText(msg.getAdminName());
+                viewHolder.txtMessage.setText(msg.getMessage());
+                viewHolder.ImgView.setImageBitmap(msg.getAdminImage());
+
+            }else
+            {
+                convertView = inflater.inflate(R.layout.messagelist_template, parent, false);
+                viewHolder.txtInfo = (TextView) convertView.findViewById(R.id.txtInfo);
+                viewHolder.txtMessage = (TextView) convertView.findViewById(R.id.txtMessage);
+                viewHolder.ImgView=(ImageView)convertView.findViewById(R.id.adminimage);
+                convertView.setTag(viewHolder);
+                viewHolder.txtInfo.setText(msg.getAdminName());
+                viewHolder.txtMessage.setText(msg.getMessage());
+                viewHolder.ImgView.setImageBitmap(msg.getAdminImage());
+            }
         }
         // Return the completed view to render on screen
         return convertView;
 
 
     }
+
+
     public int compareDate( String dte1,String dte2) {
         try {
 //            "yyyy-MM-dd'T'HH:mm:ss'Z'"

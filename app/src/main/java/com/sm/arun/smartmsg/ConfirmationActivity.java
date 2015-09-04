@@ -159,7 +159,7 @@ public class ConfirmationActivity  extends Activity{
                                 finish();
                             }
 
-//                                GetAdminDetails();
+                                GetAdminDetails();
                             break;
                     }
                 } catch (JSONException e) {

@@ -1,5 +1,6 @@
 package Model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -7,5 +8,11 @@ import java.util.List;
  */
 public class MessageListModel {
    public String SectionHeader;
-    public List<Message> Msgs;
+    public ArrayList<Message> Msgs= new ArrayList<Message>();
+    public  MessageListModel (String Name)
+    {
+        SectionHeader=Name;
+    }
 }
+
+

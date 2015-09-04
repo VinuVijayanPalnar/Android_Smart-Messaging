@@ -146,10 +146,10 @@ public class DatabaseOperations extends SQLiteOpenHelper {
     public  Cursor GetAllMessages(DatabaseOperations Dop){
         SQLiteDatabase sq=Dop.getReadableDatabase();
 
-//        String selectQuery = "SELECT  * FROM " + TableInfo.TABLE_MESSAGEDETAILS +" md, " + TableInfo.TABLE_ADMINDETAILS + " ad WHERE md." + TableInfo.SENDER_ID + " = "
-//                + "ad." + TableInfo.ADMIN_ID+" ORDER BY DATETIME("+TableInfo.CREATED_DATE+") DESC";
+        String selectQuery = "SELECT  * FROM " + TableInfo.TABLE_MESSAGEDETAILS +" md, " + TableInfo.TABLE_ADMINDETAILS + " ad WHERE md." + TableInfo.SENDER_ID + " = "
+                + "ad." + TableInfo.ADMIN_ID+" ORDER BY DATETIME("+TableInfo.CREATED_DATE+") DESC";
 //        order  by datetime(datetimeColumn) DESC LIMIT 1
-        String selectQuery = "SELECT  * FROM " + TableInfo.TABLE_MESSAGEDETAILS +" ORDER BY DATETIME("+TableInfo.CREATED_DATE+") DESC";
+//        String selectQuery = "SELECT  * FROM " + TableInfo.TABLE_MESSAGEDETAILS +" ORDER BY DATETIME("+TableInfo.CREATED_DATE+") DESC";
         Cursor c=sq.rawQuery(selectQuery, null);
         Log.d("MSG TABLE RETRIEVE:", "Messages Retrieved");
         return  c;
