@@ -59,6 +59,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import DataBaseSQlite.DBAdapter;
+import DataBaseSQlite.DatabaseOperations;
 import Model.AppUser;
 
 
@@ -75,6 +76,8 @@ public class UserProfileActivity extends Activity{
     Button Save;
     ImageButton Edit,Backbtn;
     long DbId=-1;
+    Context applicationcontext;
+    DatabaseOperations Db;
     DBAdapter db;
 
     String Username,email,regId;
@@ -89,6 +92,8 @@ public class UserProfileActivity extends Activity{
         setContentView(R.layout.userprofile_layout);
         Intent myIntent= getIntent();
         Bundle b = myIntent.getExtras();
+        applicationcontext=getApplicationContext();
+        Db=new DatabaseOperations(applicationcontext);
 
         ImageV=(ImageView)findViewById(R.id.imageView);
         UserName=(TextView)findViewById(R.id.UserNameTxTView);
@@ -111,32 +116,23 @@ public class UserProfileActivity extends Activity{
             UserName.setText(Username.toString());
             Email.setText(email.toString());
         }
-
-
-        db= new DBAdapter(this);
-        Cursor cursor = null;
         String Emailid="",Firstnmae="",lastname="",phoneno="",photo="";
-        try {
-            db.open();
-            cursor = db.getProfileDetails(DbId);
-            if (cursor.moveToFirst()) {
-                do {
-                    Toast.makeText(this, "id:" + cursor.getString(0) + "/n" + "User Name:" + cursor.getString(1) + "/n" + "Emailid:" + cursor.getString(2) + "/n" +
-                            "First Name:" + cursor.getString(3) + "/n" + "LastName:" + cursor.getString(4) + "/n" + "Phone No" + cursor.getString(5) + "/n" + "photo:" + cursor.getString(6), Toast.LENGTH_LONG).show();
-                    DbId=cursor.getInt(0);
-                    Emailid =cursor.getString(2);
-                    Firstnmae= cursor.getString(3);
-                    lastname=cursor.getString(4);
-                    phoneno=cursor.getString(5);
-                    photo=cursor.getString(6);
-                } while (cursor.moveToNext());
-            }
-            db.close();
-        }catch (Exception e)
+        Cursor Cr=Db.GetProfileDetails(Db,Username);
+        if(Cr!=null && Cr.moveToFirst())
         {
-            Log.e("exception caught", e.getMessage().toString());
-//            Toast.makeText(this,e.getMessage().toString(),Toast.LENGTH_LONG).show();
+            do{
+//                DbId=Cr.getInt(0);
+                Emailid =Cr.getString(1);
+                Firstnmae= Cr.getString(2);
+                lastname=Cr.getString(3);
+                phoneno=Cr.getString(4);
+                photo=Cr.getString(5);
+                encoded_image=photo;
+            }while (Cr.moveToNext());
         }
+        Cr.close();
+        Db.close();
+
         if(Emailid!=null)
             Email.setText(Emailid.toString());
         if(Firstnmae!=null)
@@ -145,6 +141,11 @@ public class UserProfileActivity extends Activity{
             LstName.setText(lastname.toString());
         if(phoneno!=null)
             PhoneNo.setText(phoneno.toString());
+        if(photo!=null && photo!=""){
+            if(decodeBase64(photo)!=null)
+            ImageV.setImageBitmap(decodeBase64(photo));
+        }
+
         FrstName.setEnabled(false);
         LstName.setEnabled(false);
         Email.setEnabled(false);
@@ -159,10 +160,11 @@ public class UserProfileActivity extends Activity{
         finish();
     }
     public  void SaveProfileDetails(View view) {
-        db.open();
-        boolean IsSaved =db.updateprofile(DbId,FrstName.getText().toString(),LstName.getText().toString(),Long.parseLong(PhoneNo.getText().toString()),encoded_image);
-        Toast.makeText(UserProfileActivity.this, "Is Saved:"+IsSaved, Toast.LENGTH_LONG).show();
-        db.close();
+        Db.UpdateUserDetails(Db,UserName.getText().toString(),FrstName.getText().toString(),LstName.getText().toString(),Long.parseLong(PhoneNo.getText().toString()),encoded_image);
+//        db.open();
+//        boolean IsSaved =db.updateprofile(DbId,FrstName.getText().toString(),LstName.getText().toString(),Long.parseLong(PhoneNo.getText().toString()),encoded_image);
+//        Toast.makeText(UserProfileActivity.this, "Is Saved:"+IsSaved, Toast.LENGTH_LONG).show();
+//        db.close();
         FrstName.setEnabled(false);
         LstName.setEnabled(false);
         PhoneNo.setEnabled(false);
@@ -407,7 +409,7 @@ public class UserProfileActivity extends Activity{
                     int timeout=30;
                     if(UserImage!=null)
                     encoded_image=encodeTobase64(UserImage);
-                    URL u = new URL("http://192.168.1.130/smartchat/public/editUser");
+                    URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/editUser");
                     c = (HttpURLConnection) u.openConnection();
                     c.setRequestMethod("POST");
                     // c.setRequestProperty("Content-length", "0");

@@ -154,6 +154,7 @@ public class ConfirmationActivity  extends Activity{
                             else
                             {
                                 Toast.makeText(ConfirmationActivity.this, "Login Success:New User", Toast.LENGTH_LONG).show();
+                                storeRegIdinSharedPref(applicationContext, regId, E_mail);
                                 Intent Intend = new Intent(ConfirmationActivity.this, MessagingActivity.class);
                                 startActivity(Intend);
                                 finish();

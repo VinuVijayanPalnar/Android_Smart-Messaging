@@ -96,6 +96,15 @@ public class DatabaseOperations extends SQLiteOpenHelper {
 
         Dop.close();
     }
+    public  Cursor GetProfileDetails(DatabaseOperations Dop,String userName){
+
+        SQLiteDatabase sq=Dop.getReadableDatabase();
+        String selectQuery =" SELECT * FROM "+TableInfo.TABLE_USERDETAILS+" WHERE "+TableInfo.USERNAME+" = '"+userName+"'" ;
+        Cursor c=sq.rawQuery(selectQuery, null);
+        Log.d("USER TABLE RETRIEVE:", "Profile details Retrieved");
+        return  c;
+
+    }
     public  void UpdateUserDetails(DatabaseOperations Dop,String username,String firstname,String lastname,Long phoneNO,String Photo){
 
         SQLiteDatabase sq=Dop.getWritableDatabase();
