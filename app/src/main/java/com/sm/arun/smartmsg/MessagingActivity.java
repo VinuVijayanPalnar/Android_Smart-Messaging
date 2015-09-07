@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -89,21 +90,48 @@ public class MessagingActivity extends Activity {
     private ArrayList<Message> chatHistory;
     private ArrayList<MessageListModel> Msgs;
     int AdminId;
-    String regId,AdminName,AdminImage;
+    String regId,AdminName,AdminImage,UserName;
+    TextView MsPgUserName;
+    Button ProfileDetails;
     DBAdapter db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.message_layout);
+
+//        if (!isTaskRoot()) {
+//            final Intent intent = getIntent();
+//            if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN.equals(intent.getAction())) {
+//                Log.w("Refreshed Messages", "Main Activity is not the root.  Finishing Main Activity instead of launching.");
+//                finish();
+//                return;
+//            }
+//        }
+
         db = new DBAdapter(this);
         applicationcontext=getApplicationContext();
         Db=new DatabaseOperations(applicationcontext);
         SharedPreferences prefs = getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
         regId = prefs.getString("regId", "");
+        UserName=prefs.getString("username", "");
+
         // Intent Message sent from Broadcast Receiver
         String str = getIntent().getStringExtra("msg");
 
+        ProfDetails=(Button)findViewById(R.id.profilrDetailsbtn);
+        MsPgUserName=(TextView)findViewById(R.id.MsgpgUsername);
+        MsPgUserName.setText(UserName);
+        String UserImage=Db.GetUserImage(Db, UserName);
+        if(UserImage!=null) {
+            Bitmap UsrImg = decodeBase64(UserImage);
+            BitmapDrawable bdrawable = null;
+            if (UsrImg != null) {
+                bdrawable = new BitmapDrawable(applicationcontext.getResources(), UsrImg);
+            }
+            if (bdrawable != null)
+                ProfDetails.setBackgroundDrawable(bdrawable);
+        }
         Msgs = new ArrayList<MessageListModel>();
         chatHistory= new ArrayList<Message>();
         String date=null;
@@ -312,15 +340,15 @@ public class MessagingActivity extends Activity {
             // Extract data included in the Intent
             String str = getIntent().getStringExtra("msg");
             Intent Intnt = getIntent();
-            HashMap<String, String> hashMap = (HashMap<String, String>) intent.getSerializableExtra("msg");
-            String message = hashMap.get("message");
+            HashMap<String, String> hashMap = (HashMap<String, String>)intent.getSerializableExtra("msg");
+            String message=hashMap.get("message");
             String timeStamp = hashMap.get("timeStamp");
             String AdminName = hashMap.get("AdminName");
             String AdminId = hashMap.get("AdminId");
 
             Db.InsertMessageDetails(Db, message, timeStamp, AdminName, Integer.parseInt(AdminId));
-            String AdminPhoto = Db.GetAdminPhoto(Db, AdminId);
-            Message SingleMsg = new Message();
+            String AdminPhoto =Db.GetAdminPhoto(Db, AdminId);
+             Message SingleMsg = new Message();
             SingleMsg.setType(2);
             SingleMsg.setAdminId(Integer.parseInt(AdminId));
             SingleMsg.setAdminName(AdminName);
@@ -329,24 +357,10 @@ public class MessagingActivity extends Activity {
             SingleMsg.setAdminImage(decodeBase64(AdminPhoto));
 
 //&&(compareDate(chatHistory.get(0).getMessage(),timeStamp)!=0)
-            if (chatHistory.size() > 0){
-                if ((compareDate(chatHistory.get(0).getMessage(), timeStamp) != 1)) {
-                    Message HdrMsg = new Message();
-                    HdrMsg.setMessage(timeStamp);
-                    HdrMsg.setType(1);
-
-                    chatHistory.add(0, HdrMsg);
-                    chatHistory.add(1, SingleMsg);
-                    displayMessage(HdrMsg);
-                    displayMessage(SingleMsg);
-                } else {
-                    chatHistory.add(1, SingleMsg);
-                    displayMessage(SingleMsg);
-                }
-            adptor.notifyDataSetChanged();
-            scroll();
-        }else{
-                Message HdrMsg = new Message();
+            if(chatHistory.size()>0)
+            if((compareDate(chatHistory.get(0).getMessage(),timeStamp)!=1))
+            {
+               Message HdrMsg = new Message();
                 HdrMsg.setMessage(timeStamp);
                 HdrMsg.setType(1);
 
@@ -354,7 +368,13 @@ public class MessagingActivity extends Activity {
                 chatHistory.add(1, SingleMsg);
                 displayMessage(HdrMsg);
                 displayMessage(SingleMsg);
+            }else{
+                chatHistory.add(1,SingleMsg);
+                displayMessage(SingleMsg);
             }
+            adptor.notifyDataSetChanged();
+            scroll();
+
             //do other stuff here
         }
     };

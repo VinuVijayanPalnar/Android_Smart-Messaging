@@ -48,8 +48,9 @@ public class ConfirmationActivity  extends Activity{
     private static final String MY_PREFS_NAME = "MyPrefs";
     String UserName,E_mail;
     String regId = "";
-    public static final String REG_ID = "regId";
-    public static final String EMAIL_ID = "eMailId";
+//    public static final String USER_NME = "userNme";
+//    public static final String REG_ID = "regId";
+//    public static final String EMAIL_ID = "eMailId";
     EditText ConfirmationCode;
     boolean ShouldRetrieveOldMsg;
      Button ConfirmBtn;
@@ -154,7 +155,7 @@ public class ConfirmationActivity  extends Activity{
                             else
                             {
                                 Toast.makeText(ConfirmationActivity.this, "Login Success:New User", Toast.LENGTH_LONG).show();
-                                storeRegIdinSharedPref(applicationContext, regId, E_mail);
+                                storeRegIdinSharedPref(applicationContext, regId,UserName, E_mail);
                                 Intent Intend = new Intent(ConfirmationActivity.this, MessagingActivity.class);
                                 startActivity(Intend);
                                 finish();
@@ -176,12 +177,13 @@ public class ConfirmationActivity  extends Activity{
 
     }
     private void storeRegIdinSharedPref(Context context, String regId,
-                                        String emailID) {
+                                      String userName , String emailID) {
         SharedPreferences prefs = getSharedPreferences("UserDetails",
                 Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(REG_ID, regId);
-        editor.putString(EMAIL_ID, emailID);
+        editor.putString("username", userName);
+        editor.putString("regId", regId);
+        editor.putString("emailId", emailID);
         editor.commit();
 
     }
@@ -369,7 +371,7 @@ public class ConfirmationActivity  extends Activity{
                         String response = jsObj.getString("response");
                         switch (response) {
                             case "Updated successfully":
-                                storeRegIdinSharedPref(applicationContext, regId, E_mail);
+                                storeRegIdinSharedPref(applicationContext, regId,UserName, E_mail);
                                 GetoldMessages();
                                 Toast.makeText(ConfirmationActivity.this, "Updated Successfully", Toast.LENGTH_LONG).show();
                                 break;

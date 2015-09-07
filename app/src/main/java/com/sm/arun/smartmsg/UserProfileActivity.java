@@ -160,6 +160,10 @@ public class UserProfileActivity extends Activity{
         finish();
     }
     public  void SaveProfileDetails(View view) {
+        if(UserImage!=null)
+            if(UserImage!=null)
+                encoded_image=encodeTobase64(UserImage);
+
         Db.UpdateUserDetails(Db,UserName.getText().toString(),FrstName.getText().toString(),LstName.getText().toString(),Long.parseLong(PhoneNo.getText().toString()),encoded_image);
 //        db.open();
 //        boolean IsSaved =db.updateprofile(DbId,FrstName.getText().toString(),LstName.getText().toString(),Long.parseLong(PhoneNo.getText().toString()),encoded_image);
@@ -409,6 +413,9 @@ public class UserProfileActivity extends Activity{
                     int timeout=30;
                     if(UserImage!=null)
                     encoded_image=encodeTobase64(UserImage);
+                    SharedPreferences prefs = getSharedPreferences("UserDetails",
+                            Context.MODE_PRIVATE);
+                    String registrationId = prefs.getString(REG_ID, "");
                     URL u = new URL(ApplicationConstants.APP_SERVER_URL+"/smartchat/public/editUser");
                     c = (HttpURLConnection) u.openConnection();
                     c.setRequestMethod("POST");
@@ -425,7 +432,7 @@ public class UserProfileActivity extends Activity{
                     data.add(new BasicNameValuePair("mobile_number", PhoneNo.getText().toString()));
                     data.add(new BasicNameValuePair("user_group_id", "1"));
                     data.add(new BasicNameValuePair("device_type_id","2"));
-                    data.add(new BasicNameValuePair("device_id", "xxyyrryyxx"));
+                    data.add(new BasicNameValuePair("device_id", registrationId));
                     data.add(new BasicNameValuePair("is_verified", "1"));
                     data.add(new BasicNameValuePair("photo",encoded_image));
 

@@ -8,7 +8,7 @@ public interface ApplicationConstants {
 
     static final String APP_SERVER_URL = "http://192.168.1.172";
 //    static final String APP_SERVER_URL = "http://192.168.1.146";
-
+  public String RegId = "";
     // Google Project Number
     static final String GOOGLE_PROJ_ID = "907970046546";
     // Message Key

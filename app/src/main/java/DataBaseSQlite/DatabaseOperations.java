@@ -163,6 +163,20 @@ public class DatabaseOperations extends SQLiteOpenHelper {
         Log.d("MSG TABLE RETRIEVE:", "Messages Retrieved");
         return  c;
 }
+    public  String GetUserImage(DatabaseOperations Dop, String userName){
+        SQLiteDatabase sq=Dop.getReadableDatabase();
+        String User_Image = null;
+        String[] columns={TableInfo.USERIMAGE};
+        String[] args={userName};
+        Cursor cursor=sq.query(TableInfo.TABLE_USERDETAILS, columns, TableInfo.USERNAME + "=?", args, null, null, null);
+        Log.d("USER IMAGE:", "User Image Retrieved");
+        if(cursor!=null && cursor.moveToFirst())
+        {
+            User_Image = cursor.getString(0);
+        }
+        Dop.close();
+        return User_Image;
+    }
     public  String GetAdminPhoto(DatabaseOperations Dop, String adminId){
         SQLiteDatabase sq=Dop.getReadableDatabase();
         String Sender_Image = null;

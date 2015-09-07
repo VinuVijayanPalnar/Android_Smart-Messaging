@@ -13,6 +13,7 @@
         android:layout_height="wrap_content">
         <ImageButton
             android:id="@+id/backBtn"
+            android:layout_marginTop="5dp"
            android:onClick="BackToMessages"
             android:layout_width="50dp"
             android:layout_alignParentLeft="true"
@@ -21,6 +22,7 @@
         <ImageButton
             android:id="@+id/editBtn"
             android:layout_weight=".5"
+            android:layout_marginTop="5dp"
             android:onClick="EditProfileDetails"
             android:layout_width="50dp"
             android:layout_height="30dp"
@@ -43,10 +45,11 @@
          android:src="@drawable/userimage"
         android:layout_height="match_parent"
         android:layout_width="@dimen/abc_control_inset_material"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="5dp"
         android:layout_weight=".35"
-        android:scaleType="centerInside"
+
         android:id="@+id/imageView" />
+    <!--android:scaleType="centerInside"-->
     <TextView
         android:id="@+id/UserNameTxTView"
         android:layout_width="wrap_content"

@@ -78,6 +78,8 @@ public class GCMNotificationIntentServer  extends IntentService{
 
     private void sendNotification(String mesagesg) {
         Intent resultIntent = new Intent(getApplicationContext(), MessagingActivity.class);
+        resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
         resultIntent.putExtra("msg", hashMap);
         updateMyActivity(this,hashMap);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,

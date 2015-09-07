@@ -135,7 +135,7 @@ public class RegistrationActivity extends Activity  {
                             applicationContext,
                             "Registered with GCM Server successfully.\n\n"
                                     + msg, Toast.LENGTH_SHORT).show();
-                    new ServiceTask().execute();
+                   new ServiceTask().execute();
                 } else {
                     Toast.makeText(
                             applicationContext,
