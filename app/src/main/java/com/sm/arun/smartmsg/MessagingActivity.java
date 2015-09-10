@@ -92,6 +92,7 @@ public class MessagingActivity extends Activity {
     int AdminId;
     String regId,AdminName,AdminImage,UserName;
     TextView MsPgUserName;
+    static boolean IsDataToBeFetchedFlag=false;
     Button ProfileDetails;
     DBAdapter db;
 
@@ -100,27 +101,24 @@ public class MessagingActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.message_layout);
 
-//        if (!isTaskRoot()) {
-//            final Intent intent = getIntent();
-//            if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN.equals(intent.getAction())) {
-//                Log.w("Refreshed Messages", "Main Activity is not the root.  Finishing Main Activity instead of launching.");
-//                finish();
-//                return;
-//            }
-//        }
-
-        db = new DBAdapter(this);
         applicationcontext=getApplicationContext();
         Db=new DatabaseOperations(applicationcontext);
         SharedPreferences prefs = getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
         regId = prefs.getString("regId", "");
         UserName=prefs.getString("username", "");
-
         // Intent Message sent from Broadcast Receiver
-        String str = getIntent().getStringExtra("msg");
 
+        HashMap<String, String> hashMap = (HashMap<String, String>)getIntent().getSerializableExtra("msg");
+        if(hashMap!=null)
+            GetNOtificationFromBackground(hashMap);
+
+        String str = getIntent().getStringExtra("msg");
         ProfDetails=(Button)findViewById(R.id.profilrDetailsbtn);
         MsPgUserName=(TextView)findViewById(R.id.MsgpgUsername);
+
+        messagesContainer=(ListView)findViewById(R.id.messagesContainer);
+        adptor= new MsgAdaptor(applicationcontext,new ArrayList<Message>());
+
         MsPgUserName.setText(UserName);
         String UserImage=Db.GetUserImage(Db, UserName);
         if(UserImage!=null) {
@@ -132,87 +130,149 @@ public class MessagingActivity extends Activity {
             if (bdrawable != null)
                 ProfDetails.setBackgroundDrawable(bdrawable);
         }
-        Msgs = new ArrayList<MessageListModel>();
-        chatHistory= new ArrayList<Message>();
-        String date=null;
-        MessageListModel messageList;
-        Cursor Cr=Db.GetAllMessages(Db);
-        if(Cr!=null && Cr.moveToFirst())
-        {
-            do{
-                if(date!=null) {
-                    if(compareDate(date,Cr.getString(3))!=0&&compareDate(date,Cr.getString(3))!=1) {
-                        date=Cr.getString(3);
-                        Message HdrMsg = new Message();
-                        HdrMsg.setMessage(date);
-                        HdrMsg.setType(1);
-                        chatHistory.add(HdrMsg);
-                    }
-                        Message SingleMsg = new Message();
-                        SingleMsg.setAdminId(Cr.getInt(0));
-                        SingleMsg.setType(2);
-                        SingleMsg.setAdminName(Cr.getString(1));
-                        SingleMsg.setMessage(Cr.getString(2));
-                        SingleMsg.setDate(Cr.getString(3));
-                         SingleMsg.setAdminImage(decodeBase64(Cr.getString(5)));
-                        chatHistory.add(SingleMsg);
 
-                }else
-                {
-                   date=Cr.getString(3);
-                    Message HdrMsg = new Message();
-                    HdrMsg.setMessage(date);
-                    HdrMsg.setType(1);
-                    chatHistory.add(HdrMsg);
-                    Message SingleMsg = new Message();
-                    SingleMsg.setType(2);
-                    SingleMsg.setAdminId(Cr.getInt(0));
-                    SingleMsg.setAdminName(Cr.getString(1));
-                    SingleMsg.setMessage(Cr.getString(2));
-                    SingleMsg.setDate(Cr.getString(3));
-                    SingleMsg.setAdminImage(decodeBase64(Cr.getString(5)));
-                    chatHistory.add(SingleMsg);
-                }
+       FetchAndPopulateData();
 
-            }while (Cr.moveToNext());
-        }
-        Cr.close();
-        Db.close();
-
-
-
-
-//        ExpandableListView listView = (ExpandableListView) findViewById(R.id.listView);
-//         ArrayList<MessageListModel> groups = prepareData();
-//        final CustomExpandableListAdapter adapter = new CustomExpandableListAdapter(this, groups);
-//        listView.setAdapter(adapter);
-
-        messagesContainer=(ListView)findViewById(R.id.messagesContainer);
-         adptor= new MsgAdaptor(applicationcontext,new ArrayList<Message>());
-
-        messagesContainer.setAdapter(adptor);
-        adptor.addAll(chatHistory);
-//
-        // When Message sent from Broadcase Receiver is not empty
-        if (str != null) {
-        Message msg= new Message();
-
-//         Set the message
-//            msgET = (TextView) findViewById(R.id.message);
-//            msgET.setText("");
-//            msgET.setText(str);
-        }
-        exportDatabse("MyDB",MessagingActivity.this);
-        // Check if Google Play Service is installed in Device
-        // Play services is needed to handle GCM stuffs
         if (!checkPlayServices()) {
             Toast.makeText(
                     getApplicationContext(),
                     "This device doesn't support Play services, App will not work normally",
                     Toast.LENGTH_LONG).show();
         }
+        System.out.println("Oncreate Ended");
+//        ExpandableListView listView = (ExpandableListView) findViewById(R.id.listView);
+//         ArrayList<MessageListModel> groups = prepareData();
+//        final CustomExpandableListAdapter adapter = new CustomExpandableListAdapter(this, groups);
+//        listView.setAdapter(adapter);
+
+ // When Message sent from Broadcase Receiver is not empty
+//        if (str != null) {
+//        Message msg= new Message();
+
+//         Set the message
+//            msgET = (TextView) findViewById(R.id.message);
+//            msgET.setText("");
+//            msgET.setText(str);
+//        }
+//        exportDatabse("MyDB",MessagingActivity.this);
+        // Check if Google Play Service is installed in Device
+        // Play services is needed to handle GCM stuffs
+
+ }
+    public void GetNOtificationFromBackground( HashMap<String, String> hashMap)
+    {
+        String message=hashMap.get("message");
+        String timeStamp = hashMap.get("timeStamp");
+        String AdminName = hashMap.get("AdminName");
+        String AdminId = hashMap.get("AdminId");
+
+        Db.InsertMessageDetails(Db, message, timeStamp, AdminName, Integer.parseInt(AdminId));
+        String AdminPhoto =Db.GetAdminPhoto(Db, AdminId);
+        Message SingleMsg = new Message();
+        SingleMsg.setType(2);
+        SingleMsg.setAdminId(Integer.parseInt(AdminId));
+        SingleMsg.setAdminName(AdminName);
+        SingleMsg.setMessage(message);
+        SingleMsg.setDate(timeStamp);
+        SingleMsg.setAdminImage(decodeBase64(AdminPhoto));
+
+    //&&(compareDate(chatHistory.get(0).getMessage(),timeStamp)!=0)
+        if(chatHistory.size()>0) {
+            if ((compareDate(chatHistory.get(0).getMessage(), timeStamp) != 1)) {
+                Message HdrMsg = new Message();
+                HdrMsg.setMessage(timeStamp);
+                HdrMsg.setType(1);
+
+                chatHistory.add(0, HdrMsg);
+                chatHistory.add(1, SingleMsg);
+                displayMessage(HdrMsg);
+                displayMessage(SingleMsg);
+//                    displayMessage(chatHistory);
+            } else {
+                chatHistory.add(1, SingleMsg);
+                displayMessage(SingleMsg);
+//                    displayMessage(chatHistory);
+//                    adptor=new MsgAdaptor(applicationcontext,chatHistory);
+            }
+            adptor.notifyDataSetChanged();
+            scroll();
+        }else{
+            Message HdrMsg = new Message();
+            HdrMsg.setMessage(timeStamp);
+            HdrMsg.setType(1);
+
+            chatHistory.add(0, HdrMsg);
+            chatHistory.add(1, SingleMsg);
+            displayMessage(HdrMsg);
+            displayMessage(SingleMsg);
+//                displayMessage(chatHistory);
+//                adptor=new MsgAdaptor(applicationcontext,chatHistory);
+        }
+    }
+    public void FetchAndPopulateData() {
+        chatHistory= new ArrayList<Message>();
+        new AsyncTask<Object, Object, Cursor>() {
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+            @Override
+            protected Cursor doInBackground(Object... params) {
+            return  Db.GetAllMessages(Db);
+            }
+
+            @Override
+            protected void onPostExecute(Cursor Cr) {
+                String date=null;
+                if(Cr!=null && Cr.moveToFirst())
+                {
+                    do{
+                        if(date!=null) {
+                            if(compareDate(date,Cr.getString(3))!=0&&compareDate(date,Cr.getString(3))!=1) {
+                                date=Cr.getString(3);
+                                Message HdrMsg = new Message();
+                                HdrMsg.setMessage(date);
+                                HdrMsg.setType(1);
+                                chatHistory.add(HdrMsg);
+                            }
+                            Message SingleMsg = new Message();
+                            SingleMsg.setAdminId(Cr.getInt(0));
+                            SingleMsg.setType(2);
+                            SingleMsg.setAdminName(Cr.getString(1));
+                            SingleMsg.setMessage(Cr.getString(2));
+                            SingleMsg.setDate(Cr.getString(3));
+                            SingleMsg.setAdminImage(decodeBase64(Cr.getString(5)));
+                            chatHistory.add(SingleMsg);
+
+                        }else
+                        {
+                            date=Cr.getString(3);
+                            Message HdrMsg = new Message();
+                            HdrMsg.setMessage(date);
+                            HdrMsg.setType(1);
+                            chatHistory.add(HdrMsg);
+                            Message SingleMsg = new Message();
+                            SingleMsg.setType(2);
+                            SingleMsg.setAdminId(Cr.getInt(0));
+                            SingleMsg.setAdminName(Cr.getString(1));
+                            SingleMsg.setMessage(Cr.getString(2));
+                            SingleMsg.setDate(Cr.getString(3));
+                            SingleMsg.setAdminImage(decodeBase64(Cr.getString(5)));
+                            chatHistory.add(SingleMsg);
+                        }
+
+                    }while (Cr.moveToNext());
+                }
+                Cr.close();
+                Db.close();
+
+                messagesContainer.setAdapter(adptor);
+                adptor.addAll(chatHistory);
+            }
+        }.execute();
 
 
+        System.out.println("Came out of function");
     }
 
     public ArrayList<MessageListModel> prepareData() {
@@ -331,7 +391,6 @@ public class MessagingActivity extends Activity {
         applicationcontext.unregisterReceiver(mMessageReceiver);
     }
 
-
     //This is the handler that will manager to process the broadcast intent
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -357,10 +416,27 @@ public class MessagingActivity extends Activity {
             SingleMsg.setAdminImage(decodeBase64(AdminPhoto));
 
 //&&(compareDate(chatHistory.get(0).getMessage(),timeStamp)!=0)
-            if(chatHistory.size()>0)
-            if((compareDate(chatHistory.get(0).getMessage(),timeStamp)!=1))
-            {
-               Message HdrMsg = new Message();
+            if(chatHistory.size()>0) {
+                if ((compareDate(chatHistory.get(0).getMessage(), timeStamp) != 1)) {
+                    Message HdrMsg = new Message();
+                    HdrMsg.setMessage(timeStamp);
+                    HdrMsg.setType(1);
+
+                    chatHistory.add(0, HdrMsg);
+                    chatHistory.add(1, SingleMsg);
+                    displayMessage(HdrMsg);
+                    displayMessage(SingleMsg);
+//                    displayMessage(chatHistory);
+                } else {
+                    chatHistory.add(1, SingleMsg);
+                    displayMessage(SingleMsg);
+//                    displayMessage(chatHistory);
+//                    adptor=new MsgAdaptor(applicationcontext,chatHistory);
+                }
+                adptor.notifyDataSetChanged();
+             scroll();
+            }else{
+                Message HdrMsg = new Message();
                 HdrMsg.setMessage(timeStamp);
                 HdrMsg.setType(1);
 
@@ -368,18 +444,13 @@ public class MessagingActivity extends Activity {
                 chatHistory.add(1, SingleMsg);
                 displayMessage(HdrMsg);
                 displayMessage(SingleMsg);
-            }else{
-                chatHistory.add(1,SingleMsg);
-                displayMessage(SingleMsg);
+//                displayMessage(chatHistory);
+//                adptor=new MsgAdaptor(applicationcontext,chatHistory);
             }
-            adptor.notifyDataSetChanged();
-            scroll();
-
             //do other stuff here
         }
     };
-    public static Bitmap decodeBase64(String input)
-    {
+    public static Bitmap decodeBase64(String input) {
         try {
             byte[] decodedByte = Base64.decode(input, 0);
             return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
@@ -387,6 +458,7 @@ public class MessagingActivity extends Activity {
             return null;
         }
     }
+
     private void FetchAdminPhoto() {
         new AsyncTask<String, Void, String>() {
             @Override
@@ -472,6 +544,7 @@ public class MessagingActivity extends Activity {
         }.execute();
 
     }
+
     public boolean isJSONValid(String test) {
         try {
             new JSONObject(test);
@@ -487,35 +560,6 @@ public class MessagingActivity extends Activity {
         return true;
     }
 
-
-//    private void initControls() {
-//        messagesContainer = (ListView) findViewById(R.id.messagesContainer);
-//        RelativeLayout container = (RelativeLayout) findViewById(R.id.container);
-//        ProfDetails = (Button) findViewById(R.id.profilrDetailsbtn);
-//
-//        loadDummyHistory();
-////        sendBtn.setOnClickListener(new View.OnClickListener() {
-////            @Override
-////            public void onClick(View v) {
-////                String messageText = messageET.getText().toString();
-////                if (TextUtils.isEmpty(messageText)) {
-////                    return;
-////                }
-////
-////                Message chatMessage = new Message();
-////                chatMessage.setId(122);//dummy
-////                chatMessage.setMessage(messageText);
-////                chatMessage.setDate(DateFormat.getDateTimeInstance().format(new Date()));
-////                chatMessage.setMe(true);
-////
-////                messageET.setText("");
-////
-////                displayMessage(chatMessage);
-////            }
-////        });
-//
-//    }
-
     public void ToProfileDetailsPg(View view) {
         Intent i = new Intent(MessagingActivity.this, UserProfileActivity.class);
         i.putExtra("regId", regId);
@@ -524,11 +568,14 @@ public class MessagingActivity extends Activity {
     }
 
     public void displayMessage(Message message) {
+//public void displayMessage(ArrayList<Message> message) {
        if (adptor != null)
-           adptor.add(message);
+       {
+         adptor.add(message);
+       }
         else{
            adptor= new MsgAdaptor(applicationcontext,new ArrayList<Message>());
-            messagesContainer.setAdapter(adptor);
+           messagesContainer.setAdapter(adptor);
            adptor.add(message);
 
        }
@@ -539,33 +586,7 @@ public class MessagingActivity extends Activity {
 
     private void scroll() {
 //        messagesContainer.setSelection(messagesContainer.getCount() - 1);
-        messagesContainer.smoothScrollToPosition(0);
-    }
-
-    private void loadDummyHistory() {
-
-        chatHistory = new ArrayList<Message>();
-
-        Message msg = new Message();
-        msg.setId(1);
-
-        msg.setMessage("Hi");
-        msg.setDate(DateFormat.getDateTimeInstance().format(new Date()));
-        chatHistory.add(msg);
-        Message msg1 = new Message();
-        msg1.setId(2);
-
-        msg1.setMessage("How r u doing???");
-        msg1.setDate(DateFormat.getDateTimeInstance().format(new Date()));
-        chatHistory.add(msg1);
-
-        adapter = new MessageAdaptor(getApplicationContext(), new ArrayList<Message>());
-        messagesContainer.setAdapter(adapter);
-
-        for (int i = 0; i < chatHistory.size(); i++) {
-            Message message = chatHistory.get(i);
-//            displayMessage(message);
-        }
+        messagesContainer.smoothScrollToPosition(chatHistory.size());
     }
 
     // Check if Google Playservices is installed in Device or not
@@ -615,7 +636,7 @@ public class MessagingActivity extends Activity {
 
     public static void exportDatabse(String databaseName,Context context) {
         try {
-System.out.println("Enter ");
+            System.out.println("Enter ");
             File sd = Environment.getExternalStorageDirectory();
             File data = Environment.getDataDirectory();
 
@@ -642,4 +663,7 @@ System.out.println("Enter ");
             System.out.println("EX Done ");
         }
     }
+
+
+
 }

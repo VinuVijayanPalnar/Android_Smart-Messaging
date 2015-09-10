@@ -3,6 +3,7 @@ package Model;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -16,6 +17,7 @@ import com.sm.arun.smartmsg.R;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 
@@ -24,9 +26,12 @@ import java.util.Locale;
  */
 public class MsgAdaptor extends ArrayAdapter<Message> {
     String date=null;
-    int Datatype;
+    int Msgtype;
     String SesctionHdr=null;
     ViewHolder viewHolder = null;
+    ArrayList<Message> MsgList;
+    Context ctxt;
+    private boolean mNotifyOnChange = true;
     // View lookup cache
     private static class ViewHolder {
         ImageView ImgView;
@@ -39,42 +44,71 @@ public class MsgAdaptor extends ArrayAdapter<Message> {
 
     public MsgAdaptor(Context context, ArrayList<Message> msg) {
         super(context, R.layout.messagelist_template, msg);
+
+    }
+    @Override
+    public void notifyDataSetChanged() {
+        super.notifyDataSetChanged();
+        mNotifyOnChange = true;
     }
 
+    public void setNotifyOnChange(boolean notifyOnChange) {
+        mNotifyOnChange = notifyOnChange;
+    }
+
+
+    //    @Override
+//    public int getViewTypeCount() {
+//
+//        return getCount();
+//    }
+//
+//    @Override
+//    public int getItemViewType(int position) {
+//
+//        return position;
+//    }
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         // Get the data item for this position
 
         Message msg=getItem(position);
-        Datatype=msg.getType();
+        Msgtype=msg.getType();
 
         LayoutInflater inflater = LayoutInflater.from(getContext());
         if (convertView == null) {
 
             viewHolder = new ViewHolder();
-            switch(Datatype)
+            switch(Msgtype)
             {
                 case 1:
                     convertView = inflater.inflate(R.layout.listitem_seperator, parent, false);
                     viewHolder.seperator = (TextView) convertView.findViewById(R.id.seperator);
-                    convertView.setTag(viewHolder);
+//                    convertView.setTag(viewHolder);
                     break;
                 case 2:
                     convertView = inflater.inflate(R.layout.messagelist_template, parent, false);
                     viewHolder.txtInfo = (TextView) convertView.findViewById(R.id.txtInfo);
                     viewHolder.txtMessage = (TextView) convertView.findViewById(R.id.txtMessage);
                     viewHolder.ImgView=(ImageView)convertView.findViewById(R.id.adminimage);
-                    convertView.setTag(viewHolder);
+//                    convertView.setTag(viewHolder);
                     break;
             }
-
-        } else {
+            convertView.setTag(viewHolder);
+        } else
             viewHolder = (ViewHolder) convertView.getTag();
-        }
+
+
+//        viewHolder.ImgView.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                return false;
+//            }
+//        });
         // Populate the data into the template view using the data object
 //        viewHolder.txtInfo.setText(msg.getAdminName());
 //        viewHolder.txtMessage.setText(msg.getMessage());
-        if(Datatype==1) {
+        if(Msgtype==1) {
             if (viewHolder.seperator != null )
                 viewHolder.seperator.setText(msg.getMessage());
             else
@@ -90,9 +124,9 @@ public class MsgAdaptor extends ArrayAdapter<Message> {
             {
                 viewHolder.txtInfo.setText(msg.getAdminName());
                 viewHolder.txtMessage.setText(msg.getMessage());
-                viewHolder.ImgView.setImageBitmap(msg.getAdminImage());
+                viewHolder.ImgView.setImageBitmap(msg.getAdminImage());}
 
-            }else
+            else
             {
                 convertView = inflater.inflate(R.layout.messagelist_template, parent, false);
                 viewHolder.txtInfo = (TextView) convertView.findViewById(R.id.txtInfo);
